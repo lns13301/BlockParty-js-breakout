@@ -6,7 +6,7 @@ var y = canvas.height-30;
 var dx = 2;
 var dy = -2;
 var paddleHeight = 10;
-var paddleWidth = 75;
+var paddleWidth = 65;
 var paddleX = (canvas.width-paddleWidth)/2;
 var rightPressed = false;
 var leftPressed = false;
@@ -20,6 +20,18 @@ var brickOffsetLeft = 30;
 var score = 0;
 var lives = 3;
 
+var imgBackground = new Image();
+imgBackground.src = "img/background2.png";
+imgBackground.addEventListener("load", drawBackground, false);
+
+var imgPieces = new Image();
+imgPieces.src = "img/breakout_pieces.png";
+imgPieces.addEventListener("load", drawPaddle,false);
+
+var imgBallPokeball = new Image();
+imgBallPokeball.src = "img/pokeball.png";
+imgBallPokeball.addEventListener("load", drawBall, false);
+
 var bricks = [];
 for(var c=0; c<brickColumnCount; c++) {
     bricks[c] = [];
@@ -31,6 +43,7 @@ for(var c=0; c<brickColumnCount; c++) {
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
 document.addEventListener("mousemove", mouseMoveHandler, false);
+document.addEventListener("load", drawBall, false);
 
 function keyDownHandler(e) {
     if(e.key == "Right" || e.key == "ArrowRight") {
@@ -78,19 +91,28 @@ function collisionDetection() {
 
 function drawBall() {
     ctx.beginPath();
-    ctx.arc(x, y, ballRadius, 0, Math.PI*2);
+    ctx.drawImage(imgPieces, 48, 136, 8, 8, x - 10, y - 10, 21, 21);
+    //ctx.drawImage(imgBallPokeball, x - 13, y - 12, 22, 22);
+    /*ctx.arc(x, y, ballRadius, 0, Math.PI*2);
     ctx.fillStyle = "#0095DD";
-    ctx.fill();
+    ctx.fill();*/
     ctx.closePath();
 } // 벽돌을 부숴줄 공을 생성
 
 function drawPaddle() {
     ctx.beginPath();
-    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+    ctx.drawImage(imgPieces, 8, 151, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64, 19);
+/*    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
     ctx.fillStyle = "#0095DD";
-    ctx.fill();
+    ctx.fill();*/
     ctx.closePath();
 } // 튕겨져나온 공을 받아칠 패들을 생성
+
+function drawBackground() {
+    ctx.beginPath();
+    ctx.drawImage(imgBackground, 0, 0, canvas.width, canvas.height);
+    ctx.closePath();
+}
 
 function drawBricks() {
     for(var c=0; c<brickColumnCount; c++) {
@@ -101,9 +123,10 @@ function drawBricks() {
                 bricks[c][r].x = brickX;
                 bricks[c][r].y = brickY;
                 ctx.beginPath();
-                ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                ctx.drawImage(imgPieces, 8, 8, 32, 16, brickX, brickY - 12, 72, 24);
+               /* ctx.rect(brickX, brickY, brickWidth, brickHeight);
                 ctx.fillStyle = "#0095DD";
-                ctx.fill();
+                ctx.fill();*/
                 ctx.closePath();
             }
         }
@@ -112,18 +135,19 @@ function drawBricks() {
 
 function drawScore() {
     ctx.font = "16px Arial";
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = "#dd0091";
     ctx.fillText("Score: "+score, 8, 20);
 } // 화면에 벽돌을 파괴해서 얻은 점수를 표시
 
 function drawLives() {
     ctx.font = "16px Arial";
-    ctx.fillStyle = "#0095DD";
+    ctx.fillStyle = "#dd00aa";
     ctx.fillText("Lives: "+lives, canvas.width-65, 20);
 } // 화면에 플레이어의 남은 목숨의 수를 표시
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawBackground();
     drawBricks();
     drawBall();
     drawPaddle();
@@ -139,7 +163,7 @@ function draw() {
         dy = -dy;
     }
     // 공이 벽을 닿으면 반대방향으로 이동하도록 좌표를 수정
-    else if(y + dy > canvas.height-ballRadius) {
+    else if(y + dy > canvas.height-ballRadius - 10) {
         if(x > paddleX && x < paddleX + paddleWidth) {
             dy = -dy;
         }
@@ -159,12 +183,35 @@ function draw() {
         }
     }
     // 공이 바닥에 닿으면 게임오버
-    if(rightPressed && paddleX < canvas.width-paddleWidth) {
+    /*if(rightPressed && paddleX < canvas.width-paddleWidth) {
         paddleX += 7;
     }
     else if(leftPressed && paddleX > 0) {
         paddleX -= 7;
-    } // 키보드 입력으로 패들을 움직일 경우 패들의 속도를 지정하는 부분
+    }*/ // 키보드 입력으로 패들을 움직일 경우 패들의 속도를 지정하는 부분
+
+    if(paddleX < 0) {
+        paddleX += 5;
+    }
+    else if(paddleX + paddleWidth > canvas.width) {
+        paddleX -= 5;
+    }
+
+    if(rightPressed) {
+        paddleX += 5;
+    }
+    else if(leftPressed) {
+        paddleX -= 5;
+    }
+
+    if(rightPressed && paddleX < canvas.width-paddleWidth) {
+        paddleX += 5;
+    }
+    else if(leftPressed && paddleX > 0) {
+        paddleX -= 5;
+    }
+
+
     x += dx;
     y += dy;
     requestAnimationFrame(draw); // 고정 프레임 속도보다 게임을 더 잘 렌더링 할 수 있도록 설정
