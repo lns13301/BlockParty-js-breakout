@@ -3,22 +3,27 @@ var ctx = canvas.getContext("2d");
 var ballRadius = 10;
 var x = canvas.width/2;
 var y = canvas.height-30;
-var dx = 2;
-var dy = -2;
+var ballSpeed = 12;
+var lifeInterval = 15;
+var dx = ballSpeed;
+var dy = -ballSpeed;
+var numPositionX;
+var numPositionY;
 var paddleHeight = 10;
-var paddleWidth = 65;
-var paddleX = (canvas.width-paddleWidth)/2;
+var paddleWidth = 130;
+var paddleX = (canvas.width-paddleWidth) / 2;
 var rightPressed = false;
 var leftPressed = false;
-var brickRowCount = 5;
-var brickColumnCount = 3;
-var brickWidth = 75;
-var brickHeight = 20;
-var brickPadding = 10;
-var brickOffsetTop = 30;
-var brickOffsetLeft = 30;
-var score = 0;
+var brickRowCount = 21;
+var brickColumnCount = 12;
+var brickWidth = 68;
+var brickHeight = 25;
+var brickPadding = 0;
+var brickOffsetTop = 60;
+var brickOffsetLeft = 0;
+var score = 16;
 var lives = 3;
+var combo;
 
 var imgBackground = new Image();
 imgBackground.src = "img/background2.png";
@@ -31,6 +36,18 @@ imgPieces.addEventListener("load", drawPaddle,false);
 var imgBallPokeball = new Image();
 imgBallPokeball.src = "img/pokeball.png";
 imgBallPokeball.addEventListener("load", drawBall, false);
+
+var imgNum = [];
+imgNum.push({"img":imgPieces, "sx":304, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
+imgNum.push({"img":imgPieces, "sx":311, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
+imgNum.push({"img":imgPieces, "sx":316, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
+imgNum.push({"img":imgPieces, "sx":322, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
+imgNum.push({"img":imgPieces, "sx":328, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
+imgNum.push({"img":imgPieces, "sx":334, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
+imgNum.push({"img":imgPieces, "sx":340, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
+imgNum.push({"img":imgPieces, "sx":304, "sy":57, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
+imgNum.push({"img":imgPieces, "sx":310, "sy":57, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
+imgNum.push({"img":imgPieces, "sx":316, "sy":57, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
 
 var bricks = [];
 for(var c=0; c<brickColumnCount; c++) {
@@ -101,10 +118,10 @@ function drawBall() {
 
 function drawPaddle() {
     ctx.beginPath();
-    ctx.drawImage(imgPieces, 8, 151, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64, 19);
-/*    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
-    ctx.fillStyle = "#0095DD";
-    ctx.fill();*/
+    ctx.drawImage(imgPieces, 8, 151, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
+    /*    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+        ctx.fillStyle = "#0095DD";
+        ctx.fill();*/
     ctx.closePath();
 } // 튕겨져나온 공을 받아칠 패들을 생성
 
@@ -124,9 +141,9 @@ function drawBricks() {
                 bricks[c][r].y = brickY;
                 ctx.beginPath();
                 ctx.drawImage(imgPieces, 8, 8, 32, 16, brickX, brickY - 12, 72, 24);
-               /* ctx.rect(brickX, brickY, brickWidth, brickHeight);
-                ctx.fillStyle = "#0095DD";
-                ctx.fill();*/
+                /* ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                 ctx.fillStyle = "#0095DD";
+                 ctx.fill();*/
                 ctx.closePath();
             }
         }
@@ -134,15 +151,54 @@ function drawBricks() {
 } // 앞서 만들어둔 벽돌 행렬을 토대로 벽돌을 그려냄
 
 function drawScore() {
-    ctx.font = "16px Arial";
+    ctx.drawImage(imgPieces, 328, 26, 5, 8, canvas.width * 0.02, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 316, 8, 5, 8, canvas.width * 0.03, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 304, 26, 5, 8, canvas.width * 0.04, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 322, 26, 5, 8, canvas.width * 0.05, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 328, 8, 5, 8, canvas.width * 0.06, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 323, 57, 5, 8, canvas.width * 0.07, lifeInterval, 12, 21);
+    imgNumDraw(score % 10, canvas.width * 0.14, lifeInterval);
+    if(score >= 10)
+        imgNumDraw(Math.floor(score / 10 % 10), canvas.width * 0.13, lifeInterval);
+    if(score >= 100)
+        imgNumDraw(Math.floor(score / 100 % 10), canvas.width * 0.12, lifeInterval);
+    if(score >= 1000)
+        imgNumDraw(Math.floor(score / 1000 % 10), canvas.width * 0.11, lifeInterval);
+    if(score >= 10000)
+        imgNumDraw(Math.floor(score / 10000 % 10), canvas.width * 0.10, lifeInterval);
+    if(score >= 100000)
+        imgNumDraw(Math.floor(score / 100000 % 10), canvas.width * 0.09, lifeInterval);
+    if(score >= 1000000)
+        imgNumDraw(Math.floor(score / 1000000 % 10), canvas.width * 0.08, lifeInterval);
+
+    /*ctx.font = "16px Arial";
     ctx.fillStyle = "#dd0091";
-    ctx.fillText("Score: "+score, 8, 20);
+    ctx.fillText("Score: "+score, 8, 20);*/
 } // 화면에 벽돌을 파괴해서 얻은 점수를 표시
 
 function drawLives() {
-    ctx.font = "16px Arial";
+    ctx.drawImage(imgPieces, 328, 17, 5, 8, canvas.width * 0.82, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 311, 17, 5, 8, canvas.width * 0.832, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 334, 8, 5, 8, canvas.width * 0.84, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 328, 8, 5, 8, canvas.width * 0.85, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 323, 57, 5, 8, canvas.width * 0.86, lifeInterval, 12, 21);
+
+    if(lives > 0)
+        ctx.drawImage(imgPieces, 120, 135, 9, 8, canvas.width * 0.88, lifeInterval, 36, 24);
+    if(lives > 1)
+        ctx.drawImage(imgPieces, 120, 135, 9, 8, canvas.width * 0.90, lifeInterval, 36, 24);
+    if(lives > 2)
+        ctx.drawImage(imgPieces, 120, 135, 9, 8, canvas.width * 0.92, lifeInterval, 36, 24);
+    if(lives > 3)
+        ctx.drawImage(imgPieces, 120, 135, 9, 8, canvas.width * 0.94, lifeInterval, 36, 24);
+    if(lives > 4)
+        ctx.drawImage(imgPieces, 120, 135, 9, 8, canvas.width * 0.96, lifeInterval, 36, 24);
+    if(lives > 5){
+        lives = 5;
+    }
+    /*ctx.font = "16px Arial";
     ctx.fillStyle = "#dd00aa";
-    ctx.fillText("Lives: "+lives, canvas.width-65, 20);
+    ctx.fillText("Lives: "+lives, canvas.width-65, 20);*/
 } // 화면에 플레이어의 남은 목숨의 수를 표시
 
 function draw() {
@@ -163,21 +219,68 @@ function draw() {
         dy = -dy;
     }
     // 공이 벽을 닿으면 반대방향으로 이동하도록 좌표를 수정
-    else if(y + dy > canvas.height-ballRadius - 10) {
-        if(x > paddleX && x < paddleX + paddleWidth) {
+    else if(y + dy > canvas.height-ballRadius - 6) {
+        if(x > paddleX && x < paddleX + paddleWidth + 16) {
+            if(paddleWidth / (x - paddleX) >= 20){
+                dx = -ballSpeed;
+                dx = dx * 1.5;
+                dy = dy / 1.5;
+            }
+            if(paddleWidth / (x - paddleX) < 20 && paddleWidth / (x - paddleX) >= 6.66){
+                dx = -ballSpeed;
+                dx = dx * 1.3;
+                dy = dy / 1.3;
+            }
+            if(paddleWidth / (x - paddleX) < 6.66 && paddleWidth / (x - paddleX) >= 3.33){
+                dx = -ballSpeed;
+                dx = dx * 1.15;
+                dy = dy / 1.15;
+            }
+            if(paddleWidth / (x - paddleX) < 3.33 && paddleWidth / (x - paddleX) >= 2.5){
+                dx = -ballSpeed;
+                dx = dx * 1.08;
+                dy = dy / 1.08;
+            }
+            if(paddleWidth / (x - paddleX) < 2.7  && paddleWidth / (x - paddleX) >= 1.62){
+                dx = 1.03;
+            }
+            if(paddleWidth / (x - paddleX) < 1.55  && paddleWidth / (x - paddleX) >= 1.42){
+                dx = ballSpeed;
+                dx = dx * 1.08;
+                dy = dy / 1.08;
+            }
+            if(paddleWidth / (x - paddleX) < 1.42  && paddleWidth / (x - paddleX) >= 1.17){
+                dx = ballSpeed;
+                dx = dx * 1.15;
+                dy = dy / 1.15;
+            }
+            if(paddleWidth / (x - paddleX) < 1.17  && paddleWidth / (x - paddleX) >= 1.05){
+                dx = ballSpeed;
+                dx = dx * 1.3;
+                dy = dy / 1.3;
+            }
+            if(paddleWidth / (x - paddleX) < 1.05 && paddleWidth / (x - paddleX) >= 1){
+                dx = ballSpeed;
+                dx = dx * 1.5;
+                dy = dy / 1.5;
+            }
             dy = -dy;
+            combo = 0;
         }
         else {
             lives--;
             if(!lives) {
-                alert("GAME OVER");
-                document.location.reload();
+                draw();
+                setTimeout(function() {
+                    alert("GAME OVER");
+                    document.location.reload()
+                }, 1);
             }
             else {
                 x = canvas.width/2;
                 y = canvas.height-30;
-                dx = 3;
-                dy = -3;
+                dx = ballSpeed;
+                dy = -ballSpeed;
                 paddleX = (canvas.width-paddleWidth)/2;
             }
         }
@@ -218,3 +321,9 @@ function draw() {
 }
 
 draw(); // draw 함수를 실행하여 실제 게임이 동작 되도록 함
+
+
+
+function imgNumDraw(i, numPositionX, numPositionY){
+    ctx.drawImage(imgNum[i].img, imgNum[i].sx, imgNum[i].sy, imgNum[i].sw, imgNum[i].sh, numPositionX, numPositionY, imgNum[i].dw, imgNum[i].dh);
+}
