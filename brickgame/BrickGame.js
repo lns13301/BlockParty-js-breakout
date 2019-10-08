@@ -296,12 +296,12 @@ function draw() {
 
     if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
         dx = -dx;
-        dx *= 1.1;
+        dy *= 1.05;
         // 튕긴 후 속도
     }
     if(y + dy < ballRadius) {
         dy = -dy;
-        dx *= 1.1;
+        dx *= 1.2;
         // 튕긴 후 속도
     }
     // 공이 벽을 닿으면 반대방향으로 이동하도록 좌표를 수정
@@ -353,9 +353,6 @@ function draw() {
             }
             dy = -dy;
             combo = 0;
-            dx *= 1.04;
-            dy *= 1.04;
-            // 튕긴 후 속도
         }
         else {
             lives--;
