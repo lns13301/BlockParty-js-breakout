@@ -39,6 +39,14 @@ var maxBallLocationX;
 var minBallLocationY;
 var maxBallLocationY;
 var autoPaddle;
+var mouseClicked = 0;
+var gameStateMain = 0;
+var gameStateShop = 1;
+var gameStateRound1 = 2;
+var gameStateRound2 = 3;
+var gameStateRound3 = 4;
+
+var gameState = gameStateRound1;
 
 var imgBackground = new Image();
 imgBackground.src = "img/background2.png";
@@ -112,6 +120,7 @@ function mouseMoveHandler(e) {
         paddleX = relativeX - paddleWidth/2;
     }
 }
+
 function collisionDetection() {
     for(var c=0; c<brickColumnCount; c++) {
         for(var r=0; r<brickRowCount; r++) {
@@ -275,24 +284,33 @@ function drawLives() {
 
 function draw() {
     ctx.clearRect(200, 0, canvas.width, canvas.height);
-    drawBackground();
-    drawStar();
-    drawBricks();
-    drawBall();
-    drawPaddle();
-    drawScore();
-    drawItem();
-    drawLives();
-    collisionDetection();
-    summonItem();
-    if(getItemStatus > 0){
-        dropItem();
+    if(gameState === gameStateMain){
+        drawBackground();
+
     }
-    autoItem();
-    longPaddleItem();
-    ballImage();
-    autoMode();
-    // 앞서 생성한 함수들을 호출
+    if(gameState === gameStateRound1){
+        drawBackground();
+        drawBricks();
+        drawBall();
+        drawPaddle();
+        drawScore();
+        drawItem();
+        drawLives();
+        collisionDetection();
+        summonItem();
+        if(getItemStatus > 0){
+            dropItem();
+        }
+        autoItem();
+        longPaddleItem();
+        ballImage();
+        autoMode();
+        // 앞서 생성한 함수들을 호출
+    }
+    if(gameState === gameStateShop){
+        drawBackground();
+    }
+    //drawStar();
 
     if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
         dx = -dx;
@@ -579,4 +597,5 @@ function autoMode(){
 canvas.addEventListener('click',(arg)=>{
     console.log("x = " + x);
     console.log("y = " + y);
+    mouseClicked = 1;
 });
