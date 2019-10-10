@@ -45,8 +45,21 @@ var gameStateShop = 1;
 var gameStateRound1 = 2;
 var gameStateRound2 = 3;
 var gameStateRound3 = 4;
+var time = 0;
 
 var gameState = gameStateRound1;
+
+var imgRaindrops = [];
+for(var i  = 0; i < 29; i ++){
+    imgRaindrops[i] = new Image();
+    imgRaindrops[i].src = "gif/raindrop/raindrop-" + i + ".png";
+}
+
+var imgDeadlyMoons = [];
+for(var i  = 0; i < 23; i ++){
+    imgDeadlyMoons[i] = new Image();
+    imgDeadlyMoons[i].src = "gif/DeadlyMoon/deadlyMoon" + i + ".png";
+}
 
 var imgBackground = new Image();
 imgBackground.src = "img/background2.png";
@@ -198,7 +211,7 @@ function drawPaddle() {
 
 function drawBackground() {
     ctx.beginPath();
-    ctx.drawImage(imgBackground, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(imgDeadlyMoons[Math.floor(time / 3 ) % 23], 0, 0, canvas.width, canvas.height);
     ctx.closePath();
 }
 
@@ -293,6 +306,7 @@ function draw() {
         drawBricks();
         drawBall();
         drawPaddle();
+        longPaddleItem();
         drawScore();
         drawItem();
         drawLives();
@@ -302,9 +316,9 @@ function draw() {
             dropItem();
         }
         autoItem();
-        longPaddleItem();
         ballImage();
         autoMode();
+        time++;
         // 앞서 생성한 함수들을 호출
     }
     if(gameState === gameStateShop){
@@ -515,7 +529,7 @@ function dropItem() {
         ctx.drawImage(imgCustom, 48, 0, 15, 15, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
             equipItem = 3;
-            itemUse = 12;
+            itemUse = 9;
             itemPosY = 10000;
         }
     }
