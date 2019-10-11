@@ -9,15 +9,17 @@ var dx = ballSpeed;
 var dy = -ballSpeed;
 var numPositionX;
 var numPositionY;
+var cursorX;
+var cursorY;
 var paddleHeight = 10;
 var paddleWidth = 130;
 var paddleX = (canvas.width-paddleWidth) / 2;
 var rightPressed = false;
 var leftPressed = false;
 var aPressed = false;
-var brickRowCount = 28;
+var brickRowCount = 20;
 var brickColumnCount = 12;
-var brickWidth = 51;
+var brickWidth = 60;
 var brickHeight = 25;
 var brickPadding = 0;
 var brickOffsetTop = 60;
@@ -40,19 +42,28 @@ var minBallLocationY;
 var maxBallLocationY;
 var autoPaddle;
 var mouseClicked = 0;
-var gameStateMain = 0;
+var gameStateHome = 0;
 var gameStateShop = 1;
-var gameStateRound1 = 2;
-var gameStateRound2 = 3;
-var gameStateRound3 = 4;
+var gameStateRound1 = 11;
+var gameStateRound2 = 12;
+var gameStateRound3 = 13;
 var time = 0;
+var explosionCheck = 0;
+var effectOn = 0;
+var explosionTimer = 0;
 
-var gameState = gameStateRound1;
+var gameState = gameStateHome;
 
-var imgRaindrops = [];
+var imgPortal = [];
+for(var i  = 0; i < 40; i ++){
+    imgPortal[i] = new Image();
+    imgPortal[i].src = "gif/portal/portal" + i + ".png";
+}
+
+var imgRaindrop = [];
 for(var i  = 0; i < 29; i ++){
-    imgRaindrops[i] = new Image();
-    imgRaindrops[i].src = "gif/raindrop/raindrop-" + i + ".png";
+    imgRaindrop[i] = new Image();
+    imgRaindrop[i].src = "gif/raindrop/raindrop" + i + ".png";
 }
 
 var imgDeadlyMoons = [];
@@ -61,13 +72,26 @@ for(var i  = 0; i < 23; i ++){
     imgDeadlyMoons[i].src = "gif/DeadlyMoon/deadlyMoon" + i + ".png";
 }
 
-var imgBackground = new Image();
-imgBackground.src = "img/background2.png";
-imgBackground.addEventListener("load", drawBackground, false);
+var imgRaincity = [];
+for(var i  = 0; i < 8; i ++){
+    imgRaincity[i] = new Image();
+    imgRaincity[i].src = "gif/raincity/raincity" + i + ".png";
+}
+
+var imgWaterdrop = [];
+for(var i  = 0; i < 50; i ++){
+    imgWaterdrop[i] = new Image();
+    imgWaterdrop[i].src = "gif/waterdrop/waterdrop" + i + ".png";
+}
+
+var imgExplosion = [];
+for(var i  = 0; i < 37; i ++){
+    imgExplosion[i] = new Image();
+    imgExplosion[i].src = "gif/explosion/explosion" + i + ".png";
+}
 
 var imgPieces = new Image();
 imgPieces.src = "img/breakout_pieces.png";
-imgPieces.addEventListener("load", drawPaddle,false);
 
 var imgCustom = new Image();
 imgCustom.src = "img/breakout_custom.png";
@@ -75,7 +99,12 @@ imgPieces.addEventListener("load", summonItem,false);
 
 var imgBallPokeball = new Image();
 imgBallPokeball.src = "img/pokeball.png";
-imgBallPokeball.addEventListener("load", drawBall, false);
+
+var imgPlayButton = new Image();
+imgPlayButton.src = "img/playButton.png";
+
+var imgBreakout = new Image();
+imgBreakout.src = "img/breakout.png";
 
 var imgNum = [];
 imgNum.push({"img":imgPieces, "sx":304, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
@@ -162,12 +191,27 @@ function collisionDetection() {
                             for(var lineX = minBallLocationX; lineX < maxBallLocationX; lineX++){
                                 bricks[c][lineX].status = 0;
                                 score++;
+                                explosionCheck++;
                             }
                             for(var lineY = minBallLocationY; lineY < maxBallLocationY; lineY++){
                                 bricks[lineY][r].status = 0;
                                 score++;
+                                explosionCheck++;
                             }
                         } // explosionBall Event
+                        if(explosionCheck > 0){
+                            effectOn = 37 * 12;
+                        }
+                        if(effectOn > 0 && explosionTimer < 37 * 12){
+                            effectOn--;
+                            explosionTimer++;
+                            ctx.drawImage(imgExplosion[Math.floor(explosionTimer / 6) % 37], x - 100, y - 100, 200, 200)
+                        }
+                        if(explosionTimer >= 37 * 12){
+                            explosionTimer = 0;
+                            explosionCheck = 0;
+                            effectOn = 0;
+                        }
                         itemUse--;
                     }
                     b.itembrick = 0;
@@ -209,9 +253,20 @@ function drawPaddle() {
     ctx.closePath();
 } // 튕겨져나온 공을 받아칠 패들을 생성
 
-function drawBackground() {
+function drawWaterDrop(){
     ctx.beginPath();
-    ctx.drawImage(imgDeadlyMoons[Math.floor(time / 3 ) % 23], 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(imgWaterdrop[Math.floor(time / 3 ) % 49], 0, 0, 192, 192, 650, 650, 192, 192 );
+    ctx.closePath();
+}
+function drawBackground1() {
+    ctx.beginPath();
+    ctx.drawImage(imgPlayButton, 0, 0, 800, 707, 600, 600, 300, 265 );
+    ctx.closePath();
+}
+
+function drawBackground2() {
+    ctx.beginPath();
+    ctx.drawImage(imgRaindrop[Math.floor(time / 3 ) % 29], 0, 0, canvas.width, canvas.height);
     ctx.closePath();
 }
 
@@ -224,7 +279,7 @@ function drawBricks() {
                 bricks[c][r].x = brickX;
                 bricks[c][r].y = brickY;
                 ctx.beginPath();
-                ctx.drawImage(imgPieces, 8, 8, 32, 16, brickX, brickY - 12, 54, 24);
+                ctx.drawImage(imgPieces, 8, 8, 32, 16, brickX, brickY - 12, 63, 24);
                 /* ctx.rect(brickX, brickY, brickWidth, brickHeight);
                  ctx.fillStyle = "#0095DD";
                  ctx.fill();*/
@@ -297,145 +352,165 @@ function drawLives() {
 
 function draw() {
     ctx.clearRect(200, 0, canvas.width, canvas.height);
-    if(gameState === gameStateMain){
-        drawBackground();
-
-    }
-    if(gameState === gameStateRound1){
-        drawBackground();
-        drawBricks();
-        drawBall();
-        drawPaddle();
-        longPaddleItem();
-        drawScore();
-        drawItem();
-        drawLives();
-        collisionDetection();
-        summonItem();
-        if(getItemStatus > 0){
-            dropItem();
+    if(gameState === gameStateHome){
+        ctx.drawImage(imgRaincity[Math.floor(time / 9) % 7], 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(imgBreakout, 50, 50, 1054, 525);
+        drawBackground1();
+        if(cursorX > 600 && cursorX < 900 && cursorY > 600 && cursorY < 825){
+            drawWaterDrop();
+            if(mouseClicked === 1)
+                gameState = gameStateRound1;
         }
-        autoItem();
-        ballImage();
-        autoMode();
-        time++;
-        // 앞서 생성한 함수들을 호출
+        //ctx.drawImage(imgStartButton, 300, 300);
+        //if(mouseClicked > 0 && cursorX =)
     }
-    if(gameState === gameStateShop){
-        drawBackground();
-    }
-    //drawStar();
-
-    if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
-        dx = -dx;
-        dy *= 1.05;
-        // 튕긴 후 속도
-    }
-    if(y + dy < ballRadius) {
-        dy = -dy;
-        dx *= 1.2;
-        // 튕긴 후 속도
-    }
-    // 공이 벽을 닿으면 반대방향으로 이동하도록 좌표를 수정
-    else if(y + dy > canvas.height-ballRadius - 6) {
-        if(x > paddleX && x < paddleX + paddleWidth + 16) {
-            if(paddleWidth / (x - paddleX) >= 20){
-                dx = -ballSpeed;
-                dx = dx * 1.5;
-                dy = dy / 1.45;
+    if(gameState > 10){
+        if(gameState === gameStateRound1){
+            drawBackground2();
+            drawBricks();
+            drawBall();
+            drawPaddle();
+            longPaddleItem();
+            drawScore();
+            drawItem();
+            drawLives();
+            collisionDetection();
+            summonItem();
+            if(getItemStatus > 0){
+                dropItem();
             }
-            if(paddleWidth / (x - paddleX) < 20 && paddleWidth / (x - paddleX) >= 6.66){
-                dx = -ballSpeed;
-                dx = dx * 1.3;
-                dy = dy / 1.25;
-            }
-            if(paddleWidth / (x - paddleX) < 6.66 && paddleWidth / (x - paddleX) >= 3.33){
-                dx = -ballSpeed;
-                dx = dx * 1.15;
-                dy = dy / 1.13;
-            }
-            if(paddleWidth / (x - paddleX) < 3.33 && paddleWidth / (x - paddleX) >= 2.5){
-                dx = -ballSpeed;
-                dx = dx * 1.08;
-                dy = dy / 1.08;
-            }
-            if(paddleWidth / (x - paddleX) < 2.7  && paddleWidth / (x - paddleX) >= 1.62){
-                dx = 1.03;
-                dy = dy * 1.1;
-            }
-            if(paddleWidth / (x - paddleX) < 1.55  && paddleWidth / (x - paddleX) >= 1.42){
-                dx = ballSpeed;
-                dx = dx * 1.08;
-                dy = dy / 1.08;
-            }
-            if(paddleWidth / (x - paddleX) < 1.42  && paddleWidth / (x - paddleX) >= 1.17){
-                dx = ballSpeed;
-                dx = dx * 1.15;
-                dy = dy / 1.13;
-            }
-            if(paddleWidth / (x - paddleX) < 1.17  && paddleWidth / (x - paddleX) >= 1.05){
-                dx = ballSpeed;
-                dx = dx * 1.3;
-                dy = dy / 1.25;
-            }
-            if(paddleWidth / (x - paddleX) < 1.05 && paddleWidth / (x - paddleX) >= 1){
-                dx = ballSpeed;
-                dx = dx * 1.5;
-                dy = dy / 1.45;
-            }
+            autoItem();
+            ballImage();
+            autoMode();
+            if(equipItem === 2 && itemUse > 0)
+                ctx.drawImage(imgPieces, 66, 136, 8, 8, x - 12, y - 12, 25, 25);
+            // 앞서 생성한 함수들을 호출
+        }
+        if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+            dx = -dx;
+            dy *= 1.05;
+            // 튕긴 후 속도
+        }
+        if(y + dy < ballRadius) {
             dy = -dy;
-            combo = 0;
+            dx *= 1.2;
+            // 튕긴 후 속도
         }
-        else {
-            lives--;
-            if(!lives) {
-                draw();
-                setTimeout(function() {
-                    alert("GAME OVER");
-                    document.location.reload()
-                }, 1);
+        // 공이 벽을 닿으면 반대방향으로 이동하도록 좌표를 수정
+        else if(y + dy > canvas.height-ballRadius - 6) {
+            if(x > paddleX && x < paddleX + paddleWidth + 16) {
+                if(paddleWidth / (x - paddleX) >= 20){
+                    dx = -ballSpeed;
+                    dx = dx * 1.5;
+                    dy = dy / 1.45;
+                }
+                if(paddleWidth / (x - paddleX) < 20 && paddleWidth / (x - paddleX) >= 6.66){
+                    dx = -ballSpeed;
+                    dx = dx * 1.3;
+                    dy = dy / 1.25;
+                }
+                if(paddleWidth / (x - paddleX) < 6.66 && paddleWidth / (x - paddleX) >= 3.33){
+                    dx = -ballSpeed;
+                    dx = dx * 1.15;
+                    dy = dy / 1.13;
+                }
+                if(paddleWidth / (x - paddleX) < 3.33 && paddleWidth / (x - paddleX) >= 2.5){
+                    dx = -ballSpeed;
+                    dx = dx * 1.08;
+                    dy = dy / 1.08;
+                }
+                if(paddleWidth / (x - paddleX) < 2.7  && paddleWidth / (x - paddleX) >= 1.62){
+                    dx = 1.03;
+                    dy = dy * 1.1;
+                }
+                if(paddleWidth / (x - paddleX) < 1.55  && paddleWidth / (x - paddleX) >= 1.42){
+                    dx = ballSpeed;
+                    dx = dx * 1.08;
+                    dy = dy / 1.08;
+                }
+                if(paddleWidth / (x - paddleX) < 1.42  && paddleWidth / (x - paddleX) >= 1.17){
+                    dx = ballSpeed;
+                    dx = dx * 1.15;
+                    dy = dy / 1.13;
+                }
+                if(paddleWidth / (x - paddleX) < 1.17  && paddleWidth / (x - paddleX) >= 1.05){
+                    dx = ballSpeed;
+                    dx = dx * 1.3;
+                    dy = dy / 1.25;
+                }
+                if(paddleWidth / (x - paddleX) < 1.05 && paddleWidth / (x - paddleX) >= 1){
+                    dx = ballSpeed;
+                    dx = dx * 1.5;
+                    dy = dy / 1.45;
+                }
+                dy = -dy;
+                combo = 0;
             }
             else {
-                x = canvas.width/2;
-                y = canvas.height-30;
-                dx = ballSpeed;
-                dy = -ballSpeed;
-                paddleX = (canvas.width-paddleWidth)/2;
+                lives--;
+                if(!lives) {
+                    draw();
+                    setTimeout(function() {
+                        alert("GAME OVER");
+                        document.location.reload()
+                    }, 1);
+                }
+                else {
+                    x = canvas.width/2;
+                    y = canvas.height-30;
+                    dx = ballSpeed;
+                    dy = -ballSpeed;
+                    paddleX = (canvas.width-paddleWidth)/2;
+                }
             }
         }
-    }
-    // 공이 바닥에 닿으면 게임오버
-    /*if(rightPressed && paddleX < canvas.width-paddleWidth) {
-        paddleX += 7;
-    }
-    else if(leftPressed && paddleX > 0) {
-        paddleX -= 7;
-    }*/ // 키보드 입력으로 패들을 움직일 경우 패들의 속도를 지정하는 부분
+        // 공이 바닥에 닿으면 게임오버
+        /*if(rightPressed && paddleX < canvas.width-paddleWidth) {
+            paddleX += 7;
+        }
+        else if(leftPressed && paddleX > 0) {
+            paddleX -= 7;
+        }*/ // 키보드 입력으로 패들을 움직일 경우 패들의 속도를 지정하는 부분
 
-    if(paddleX < 0) {
-        paddleX += 5;
-    }
-    else if(paddleX + paddleWidth > canvas.width) {
-        paddleX -= 5;
-    }
+        if(paddleX < 0) {
+            paddleX += 5;
+        }
+        else if(paddleX + paddleWidth > canvas.width) {
+            paddleX -= 5;
+        }
 
-    if(rightPressed) {
-        paddleX += 5;
-    }
-    else if(leftPressed) {
-        paddleX -= 5;
-    }
+        if(rightPressed) {
+            paddleX += 5;
+        }
+        else if(leftPressed) {
+            paddleX -= 5;
+        }
 
-    if(rightPressed && paddleX < canvas.width-paddleWidth) {
-        paddleX += 5;
+        if(rightPressed && paddleX < canvas.width-paddleWidth) {
+            paddleX += 5;
+        }
+        else if(leftPressed && paddleX > 0) {
+            paddleX -= 5;
+        }
+        x += dx;
+        y += dy;
     }
-    else if(leftPressed && paddleX > 0) {
-        paddleX -= 5;
+    if(gameState === gameStateShop){
+        drawBackground2();
     }
-
-
-    x += dx;
-    y += dy;
+    //drawStar();
+    if(mouseClicked > 0)
+        mouseClicked = 0;
+    time++;
+    if(dx > 0 && dx < 5)
+        dx = 5;
+    if(dx > -5 && dx < 0)
+        dx = -5;
+    if(dy > 0 && dy < 5)
+        dy = 5;
+    if(dy > -5 && dy < 0)
+        dy = -5;
+    // 공속도가 비정상적으로 늦어지면 일정속도로 설정
     requestAnimationFrame(draw); // 고정 프레임 속도보다 게임을 더 잘 렌더링 할 수 있도록 설정
 }
 
@@ -494,9 +569,9 @@ function summonItem() {
             else if(randomValue > 100 && randomValue <= 350)
                 getItemStatus = 2;
             else if(randomValue > 350 && randomValue <= 500)
-                getItemStatus = 3;
+                getItemStatus = 2;
             else if(randomValue > 500 && randomValue <= 700)
-                getItemStatus = 4;
+                getItemStatus = 2;
             else if(randomValue > 750 && randomValue <= 1000)
                 getItemStatus = 5;
         }
@@ -608,8 +683,19 @@ function autoMode(){
     }
 }
 
+document.onmousemove = function(e){
+    cursorX = e.pageX;
+    cursorY = e.pageY;
+}
+
 canvas.addEventListener('click',(arg)=>{
     console.log("x = " + x);
     console.log("y = " + y);
-    mouseClicked = 1;
+    mouseClicked++;
 });
+
+
+/*setInterval(checkCursor, 1000);
+function checkCursor(){
+    alert("Cursor at: " + cursorX + ", " + cursorY);
+}*/
