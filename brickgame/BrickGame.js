@@ -40,6 +40,9 @@ var minBallLocationX;
 var maxBallLocationX;
 var minBallLocationY;
 var maxBallLocationY;
+var minBallLocation2X;
+var maxBallLocation2X;
+var minBallLocation3X;
 var autoPaddle;
 var mouseClicked = 0;
 var gameStateHome = 0;
@@ -48,11 +51,14 @@ var gameStateRound1 = 11;
 var gameStateRound2 = 12;
 var gameStateRound3 = 13;
 var time = 0;
-var explosionCheck = 0;
-var effectOn = 0;
 var explosionTimer = 0;
 
 var gameState = gameStateHome;
+
+var explosionArray = [];
+for(var i = 0; i < 6; i++){
+    explosionArray.push({ explosionTimer: 0, dx: 0, dy: 0, dw: 0, dh: 0, explosionOn: false });
+} // 폭발탄 효과 배열
 
 var imgPortal = [];
 for(var i  = 0; i < 40; i ++){
@@ -143,6 +149,10 @@ function keyDownHandler(e) {
         if(aPressed) aPressed = false;
         else aPressed = true;
     }
+    let d = 20;
+    d +=  explosionTimer[0];
+
+
 }
 
 function keyUpHandler(e) {
@@ -175,14 +185,20 @@ function collisionDetection() {
                     if(b.status === 0)
                         b.itemBrick = 2;
                     if(equipItem > 1 && b.itemBrick === 2 && itemUse > 0){
-                        minBallLocationX = Math.floor(x / 51) - 1;
-                        minBallLocationY = Math.floor((y - 60) / 25) - 1;
-                        maxBallLocationX = minBallLocationX + 3;
-                        maxBallLocationY = minBallLocationY + 3;
+                        minBallLocationX = Math.floor(x / 60) - 2;
+                        minBallLocationY = Math.floor((y - 60) / 25) - 2;
+                        maxBallLocationX = minBallLocationX + 5;
+                        maxBallLocationY = minBallLocationY + 5;
+                        minBallLocation2X = Math.floor(x / 60) - 1;
+                        maxBallLocation2X = minBallLocationX + 4;
                         if(minBallLocationX < 0)
+                            minBallLocationX = 0;
+                        if(minBallLocation2X < 0)
                             minBallLocationX = 0;
                         if(maxBallLocationX > brickRowCount)
                             maxBallLocationX = brickRowCount;
+                        if(maxBallLocation2X > brickRowCount)
+                            maxBallLocation2X = brickRowCount;
                         if(minBallLocationY < 0)
                             minBallLocationY = 0;
                         if(maxBallLocationY > brickColumnCount)
@@ -191,38 +207,45 @@ function collisionDetection() {
                             for(var lineX = minBallLocationX; lineX < maxBallLocationX; lineX++){
                                 bricks[c][lineX].status = 0;
                                 score++;
-                                explosionCheck++;
                             }
                             for(var lineY = minBallLocationY; lineY < maxBallLocationY; lineY++){
                                 bricks[lineY][r].status = 0;
                                 score++;
-                                explosionCheck++;
                             }
-                        } // explosionBall Event
-                        if(explosionCheck > 0){
-                            effectOn = 37 * 12;
+                            for(var lineX = minBallLocation2X; lineX < minBallLocation2X; lineX++){
+                                bricks[maxBallLocationY - 1][lineX].status = 0;
+                                score++;
+                            }
+                            if(minBallLocationY <= maxBallLocationY){
+                                for(var lineX = minBallLocation2X; lineX < maxBallLocation2X; lineX++){
+                                    if(minBallLocation2X > 1){
+                                        bricks[minBallLocationY + 1][lineX].status = 0;
+                                        score++;
+                                    }
+                                }
+                            }
                         }
-                        if(effectOn > 0 && explosionTimer < 37 * 12){
-                            effectOn--;
-                            explosionTimer++;
-                            ctx.drawImage(imgExplosion[Math.floor(explosionTimer / 6) % 37], x - 100, y - 100, 200, 200)
+                        if(equipItem === 2 && itemUse > 0){
+                            explosionArray[itemUse - 1].explosionOn = true;
+                            explosionArray[itemUse - 1].explosionTimer = 37;
+
+                            explosionArray[itemUse - 1].dx =  x - 100;
+                            explosionArray[itemUse - 1].dy =  y - 100;
+                            explosionArray[itemUse - 1].dw = 200;
+                            explosionArray[itemUse - 1].dh = 200;
                         }
-                        if(explosionTimer >= 37 * 12){
-                            explosionTimer = 0;
-                            explosionCheck = 0;
-                            effectOn = 0;
-                        }
+                        //폭발 위치 지정
                         itemUse--;
                     }
                     b.itembrick = 0;
                     score++;
-                    if(dx + dy > 25)
+                    if(dx + dy > 22)
+                        score++;
+                    if(dx + dy > 28)
+                        score++;
+                    if(dx + dy > 34)
                         score++;
                     if(dx + dy > 40)
-                        score++;
-                    if(dx + dy > 50)
-                        score++;
-                    if(dx + dy > 70)
                         score += 3;
                     if(score === brickRowCount * brickColumnCount) {
                         alert("YOU WIN, CONGRATS!");
@@ -268,6 +291,27 @@ function drawBackground2() {
     ctx.beginPath();
     ctx.drawImage(imgRaindrop[Math.floor(time / 3 ) % 29], 0, 0, canvas.width, canvas.height);
     ctx.closePath();
+}
+function animationHandler() {
+    for (var i =0 ; i < 6; i++){
+        if (explosionArray[i].explosionOn === true){ //폭발이벤트 발생시
+            if (explosionArray[i].explosionTimer > 0) { //타이머가 0이상일 경우
+
+                ctx.drawImage(
+                    imgExplosion[explosionArray[i].explosionTimer % 37],
+                    explosionArray[i].dx,
+                    explosionArray[i].dy,
+                    explosionArray[i].dw,
+                    explosionArray[i].dh); //타이머 시간동안 재생
+
+                explosionArray[i].explosionTimer -= 1; //타이머 감소
+
+                if (explosionArray[i].explosionTimer === 0) // 0일경우 해당 폭발이 끝났으므로 상태를 false로 설정
+                    explosionArray[i].explosionOn = false;
+            }
+        }
+    }
+
 }
 
 function drawBricks() {
@@ -364,6 +408,10 @@ function draw() {
         //ctx.drawImage(imgStartButton, 300, 300);
         //if(mouseClicked > 0 && cursorX =)
     }
+
+
+
+
     if(gameState > 10){
         if(gameState === gameStateRound1){
             drawBackground2();
@@ -382,6 +430,10 @@ function draw() {
             autoItem();
             ballImage();
             autoMode();
+
+
+            animationHandler(); //애니메이션
+
             if(equipItem === 2 && itemUse > 0)
                 ctx.drawImage(imgPieces, 66, 136, 8, 8, x - 12, y - 12, 25, 25);
             // 앞서 생성한 함수들을 호출
@@ -510,7 +562,15 @@ function draw() {
         dy = 5;
     if(dy > -5 && dy < 0)
         dy = -5;
-    // 공속도가 비정상적으로 늦어지면 일정속도로 설정
+    if(dx > 30)
+        dx = 30;
+    if(dx < -30)
+        dx = -30;
+    if(dy > 30)
+        dy = 30;
+    if(dy < -30)
+        dy = -30;
+    // 공속도가 비정상적으로 느려지거나 빨라지면 일정속도로 설정
     requestAnimationFrame(draw); // 고정 프레임 속도보다 게임을 더 잘 렌더링 할 수 있도록 설정
 }
 
@@ -573,7 +633,7 @@ function summonItem() {
             else if(randomValue > 500 && randomValue <= 700)
                 getItemStatus = 2;
             else if(randomValue > 750 && randomValue <= 1000)
-                getItemStatus = 5;
+                getItemStatus = 2;
         }
         breakBrick = 0;
     }
@@ -618,9 +678,9 @@ function dropItem() {
     }
     if(getItemStatus === 5){
         ctx.drawImage(imgCustom, 80, 0, 15, 15, itemPosX, itemPosY, 30, 30);
-        if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
-            dx = dx / 3 * 2;
-            dy = dx / 3 * 2;
+        if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height && getItemStatus === 5){
+            dx = dx * 0.7;
+            dy = dx * 0.7;
             getItemStatus = 0;
             itemPosY = 10000;
         }
