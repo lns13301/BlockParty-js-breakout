@@ -239,13 +239,15 @@ function collisionDetection() {
                     }
                     b.itembrick = 0;
                     score++;
-                    if(dx + dy > 22)
+                    if(dx > 13 || dy > 13 || dx < -13 || dy < -13)
                         score++;
-                    if(dx + dy > 28)
+                    if(dx > 18 || dy > 18 || dx < -18 || dy < -18)
                         score++;
-                    if(dx + dy > 34)
+                    if(dx > 22 || dy > 22 || dx < -22 || dy < -22)
                         score++;
-                    if(dx + dy > 40)
+                    if(dx > 25 || dy > 25 || dx < -25 || dy < -25)
+                        score++;
+                    if(dx > 29 || dy > 29 || dx < -29 || dy < -29)
                         score += 3;
                     if(score === brickRowCount * brickColumnCount) {
                         alert("YOU WIN, CONGRATS!");
