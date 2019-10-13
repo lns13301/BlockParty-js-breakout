@@ -17,7 +17,7 @@ var paddleX = (canvas.width-paddleWidth) / 2;
 var rightPressed = false;
 var leftPressed = false;
 var aPressed = false;
-var brickRowCount = 20;
+var brickRowCount = 12;
 var brickColumnCount = 12;
 var brickWidth = 60;
 var brickHeight = 25;
@@ -27,12 +27,10 @@ var brickOffsetLeft = 0;
 var score = 0;
 var lives = 3;
 var combo;
-var moveStar = 0;
 var breakBrick = 0;
 var itemPosX = 0;
 var itemPosY = 0;
 var getItemStatus = 0;
-var starLength = 0;
 var itemUse = 0;
 var equipItem = 0;
 var randomValue = 0;
@@ -42,22 +40,30 @@ var minBallLocationY;
 var maxBallLocationY;
 var minBallLocation2X;
 var maxBallLocation2X;
-var minBallLocation3X;
 var autoPaddle;
 var mouseClicked = 0;
 var gameStateHome = 0;
-var gameStateShop = 1;
+var gameEnding = 1;
+var gameStateLevelUp = 2;
 var gameStateRound1 = 11;
 var gameStateRound2 = 12;
 var gameStateRound3 = 13;
+var gameStateRound4 = 14;
 var time = 0;
-var explosionTimer = 0;
+var initRound = 0;
+var beforeLevel = 0;
+var gameStartTimer = -1;
 
 var gameState = gameStateHome;
 
 var explosionArray = [];
 for(var i = 0; i < 6; i++){
     explosionArray.push({ explosionTimer: 0, dx: 0, dy: 0, dw: 0, dh: 0, explosionOn: false });
+} // 폭발탄 효과 배열
+
+var flameArray = [];
+for(var i = 0; i < 10; i++){
+    flameArray.push({ flameTimer: 0, dx: 0, dy: 0, dw: 0, dh: 0, flameOn: false });
 } // 폭발탄 효과 배열
 
 var imgPortal = [];
@@ -90,10 +96,40 @@ for(var i  = 0; i < 50; i ++){
     imgWaterdrop[i].src = "gif/waterdrop/waterdrop" + i + ".png";
 }
 
+var imgGameMain = [];
+for(var i  = 0; i < 20; i ++){
+    imgGameMain[i] = new Image();
+    imgGameMain[i].src = "gif/gameMain/gameMain" + i + ".png";
+}
+
+var imgGameEnding = [];
+for(var i  = 0; i < 31; i ++){
+    imgGameEnding[i] = new Image();
+    imgGameEnding[i].src = "gif/gameEnding/gameEnding" + i + ".png";
+}
+
+var imgDawn = [];
+for(var i  = 0; i < 28; i ++){
+    imgDawn[i] = new Image();
+    imgDawn[i].src = "gif/dawn/dawn-" + i + ".png";
+}
+
+var imgSunrise = [];
+for(var i  = 0; i < 54; i ++){
+    imgSunrise[i] = new Image();
+    imgSunrise[i].src = "gif/sunrise/sunrise" + i + ".png";
+}
+
 var imgExplosion = [];
 for(var i  = 0; i < 37; i ++){
     imgExplosion[i] = new Image();
     imgExplosion[i].src = "gif/explosion/explosion" + i + ".png";
+}
+
+var imgFlame = [];
+for(var i  = 0; i < 21; i ++){
+    imgFlame[i] = new Image();
+    imgFlame[i].src = "gif/flame/flame-" + i + ".png";
 }
 
 var imgPieces = new Image();
@@ -112,6 +148,21 @@ imgPlayButton.src = "img/playButton.png";
 var imgBreakout = new Image();
 imgBreakout.src = "img/breakout.png";
 
+var imgRound1 = new Image();
+imgRound1.src = "img/round1.png";
+
+var imgRound2 = new Image();
+imgRound2.src = "img/round2.png";
+
+var imgRound3 = new Image();
+imgRound3.src = "img/round3.png";
+
+var imgRound4 = new Image();
+imgRound4.src = "img/round4.png";
+
+var imgWin = new Image();
+imgWin.src = "img/win.png";
+
 var imgNum = [];
 imgNum.push({"img":imgPieces, "sx":304, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
 imgNum.push({"img":imgPieces, "sx":311, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
@@ -125,12 +176,25 @@ imgNum.push({"img":imgPieces, "sx":310, "sy":57, "sw":5, "sh":8, "numPosX":numPo
 imgNum.push({"img":imgPieces, "sx":316, "sy":57, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
 
 var bricks = [];
-for(var c=0; c<brickColumnCount; c++) {
-    bricks[c] = [];
-    for(var r=0; r<brickRowCount; r++) {
-        bricks[c][r] = { x: 0, y: 0, status: 1, itemBrick: 1};
-    }
-} // 변수에 지정해둔 벽돌의 행렬 값을 통해 벽돌 행렬을 구현
+function makeBricks(){
+    for(var c=0; c<brickColumnCount; c++) {
+        bricks[c] = [];
+        for(var r=0; r<brickRowCount; r++) {
+            bricks[c][r] = { x: 0, y: 0, status: 1, itemBrick: 1};
+        }
+    } // 변수에 지정해둔 벽돌의 행렬 값을 통해 벽돌 행렬을 구현
+    getItemStatus = 0;
+    equipItem = 0;
+    itemUse = 0;
+    getItemStatus = 0;
+    dx = 9;
+    dy = 9;
+    x = canvas.width/2;
+    y = canvas.height-30;
+    if(score > 10)
+        score += 200;
+    // 초기화 구문
+}
 
 document.addEventListener("keydown", keyDownHandler, false);
 document.addEventListener("keyup", keyUpHandler, false);
@@ -145,14 +209,18 @@ function keyDownHandler(e) {
     else if(e.key === "Left" || e.key === "ArrowLeft") {
         leftPressed = true;
     }
-    else if(e.key === "a" || e.key === "a") {
+    else if(e.key === "a" || e.key === "ㅁ" || e.key === "A") {
         if(aPressed) aPressed = false;
         else aPressed = true;
     }
-    let d = 20;
-    d +=  explosionTimer[0];
-
-
+    else if(e.key === "n" || e.key === "ㅜ" || e.key === "N") {
+        beforeLevel = gameState;
+        gameState = gameStateLevelUp
+    }
+    else if(e.key === "t" || e.key === "T" || e.key === "ㅅ") {
+        dx *= 1.2;
+        dy *= 1.2;
+    }
 }
 
 function keyUpHandler(e) {
@@ -162,7 +230,6 @@ function keyUpHandler(e) {
     else if(e.key === "Left" || e.key === "ArrowLeft") {
         leftPressed = false;
     }
-
 }
 // 마우스의 눌러짐을 감지하여 true, false로 값을 변경해주는 부분
 
@@ -177,14 +244,20 @@ function collisionDetection() {
     for(var c=0; c<brickColumnCount; c++) {
         for(var r=0; r<brickRowCount; r++) {
             var b = bricks[c][r];
-            if(b.status === 1) {
+            if(b.status > 0) {
                 if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
+                    if(b.status > 30 && time > 600){
+                        getItemStatus = 0;
+                        itemPosY = 0;
+                        getItemStatus = 7;
+                        time = 0;
+                    }
                     dy = -dy;
-                    b.status = 0;
+                    b.status--;
                     breakBrick++;
-                    if(b.status === 0)
+                    if(b.status > 0)
                         b.itemBrick = 2;
-                    if(equipItem > 1 && b.itemBrick === 2 && itemUse > 0){
+                    if(equipItem > 1 && b.itemBrick > 0 && itemUse > 0){
                         minBallLocationX = Math.floor(x / 60) - 2;
                         minBallLocationY = Math.floor((y - 60) / 25) - 2;
                         maxBallLocationX = minBallLocationX + 5;
@@ -203,29 +276,27 @@ function collisionDetection() {
                             minBallLocationY = 0;
                         if(maxBallLocationY > brickColumnCount)
                             maxBallLocationY = brickColumnCount;
-                        if(equipItem === 2){
+                        if(equipItem === 2 && itemUse > 0){
                             for(var lineX = minBallLocationX; lineX < maxBallLocationX; lineX++){
-                                bricks[c][lineX].status = 0;
+                                bricks[c][lineX].status--;
                                 score++;
                             }
                             for(var lineY = minBallLocationY; lineY < maxBallLocationY; lineY++){
-                                bricks[lineY][r].status = 0;
+                                bricks[lineY][r].status--;
                                 score++;
                             }
                             for(var lineX = minBallLocation2X; lineX < minBallLocation2X; lineX++){
-                                bricks[maxBallLocationY - 1][lineX].status = 0;
+                                bricks[maxBallLocationY - 1][lineX].status--;
                                 score++;
                             }
                             if(minBallLocationY <= maxBallLocationY){
                                 for(var lineX = minBallLocation2X; lineX < maxBallLocation2X; lineX++){
                                     if(minBallLocation2X > 1){
-                                        bricks[minBallLocationY + 1][lineX].status = 0;
+                                        bricks[minBallLocationY + 1][lineX].status--;
                                         score++;
                                     }
                                 }
                             }
-                        }
-                        if(equipItem === 2 && itemUse > 0){
                             explosionArray[itemUse - 1].explosionOn = true;
                             explosionArray[itemUse - 1].explosionTimer = 37;
 
@@ -233,8 +304,18 @@ function collisionDetection() {
                             explosionArray[itemUse - 1].dy =  y - 100;
                             explosionArray[itemUse - 1].dw = 200;
                             explosionArray[itemUse - 1].dh = 200;
+                        } //  폭발탄 발생 시 발생하는 이벤트 처리 및 폭발 위치 지정
+                        if(equipItem === 6 && itemUse > 0){
+                            flameArray[itemUse - 1].flameOn = true;
+                            flameArray[itemUse - 1].flameTimer = 20;
+
+                            flameArray[itemUse - 1].dx =  x - 160;
+                            flameArray[itemUse - 1].dy =  y - 220;
+                            flameArray[itemUse - 1].dw = 300;
+                            flameArray[itemUse - 1].dh = 200;
+                            if(b.status < 30)
+                                b.status = 0;
                         }
-                        //폭발 위치 지정
                         itemUse--;
                     }
                     b.itembrick = 0;
@@ -249,10 +330,10 @@ function collisionDetection() {
                         score++;
                     if(dx > 29 || dy > 29 || dx < -29 || dy < -29)
                         score += 3;
-                    if(score === brickRowCount * brickColumnCount) {
+                    /*if(score === brickRowCount * brickColumnCount) {
                         alert("YOU WIN, CONGRATS!");
                         document.location.reload();
-                    }
+                    }*/
                 }
             }
         }
@@ -280,23 +361,56 @@ function drawPaddle() {
 
 function drawWaterDrop(){
     ctx.beginPath();
-    ctx.drawImage(imgWaterdrop[Math.floor(time / 3 ) % 49], 0, 0, 192, 192, 650, 650, 192, 192 );
+    ctx.drawImage(imgWaterdrop[Math.floor(time / 3 ) % 49], 0, 0, 192, 192, 250, 700, 192, 192 );
     ctx.closePath();
 }
 function drawBackground1() {
     ctx.beginPath();
-    ctx.drawImage(imgPlayButton, 0, 0, 800, 707, 600, 600, 300, 265 );
+    ctx.drawImage(imgGameMain[Math.floor(time / 3 ) % 20], 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(imgPlayButton, 0, 0, 600, 200, canvas.width / 2 - 170, canvas.height * 0.7, 350, 150);
+    if(cursorX > 200 && cursorX < 500 && cursorY > 650 && cursorY < 780){
+        drawWaterDrop();
+        if(mouseClicked === 1){
+            gameState = gameStateLevelUp;
+            beforeLevel = 0;
+        }
+    }
     ctx.closePath();
 }
 
 function drawBackground2() {
     ctx.beginPath();
-    ctx.drawImage(imgRaindrop[Math.floor(time / 3 ) % 29], 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(imgRaindrop[Math.floor(time / 9) % 29], 0, 0, canvas.width, canvas.height);
     ctx.closePath();
 }
+
+function drawBackground3() {
+    ctx.beginPath();
+    ctx.drawImage(imgRaincity[Math.floor(time / 9) % 7], 0, 0, canvas.width, canvas.height);
+    ctx.closePath();
+}
+
+function drawBackground4() {
+    ctx.beginPath();
+    ctx.drawImage(imgDawn[Math.floor(time / 9) % 27], 0, 0, canvas.width, canvas.height);
+    ctx.closePath();
+}
+
+function drawBackground5() {
+    ctx.beginPath();
+    ctx.drawImage(imgSunrise[Math.floor(time / 9) % 53], 0, 0, canvas.width, canvas.height);
+    ctx.closePath();
+}
+
+function drawBackground6() {
+    ctx.beginPath();
+    ctx.drawImage(imgGameEnding[Math.floor(time / 3) % 31], 0, 0, canvas.width, canvas.height);
+    ctx.closePath();
+}
+
 function animationHandler() {
     for (var i =0 ; i < 6; i++){
-        if (explosionArray[i].explosionOn === true){ //폭발이벤트 발생시
+        if (explosionArray[i].explosionOn === true){ //폭발 이벤트 발생 시
             if (explosionArray[i].explosionTimer > 0) { //타이머가 0이상일 경우
 
                 ctx.drawImage(
@@ -316,12 +430,36 @@ function animationHandler() {
 
 }
 
+function animationHandler2() {
+    for (var i =0 ; i < 10; i++){
+        if (flameArray[i].flameOn === true){ //플레임 이벤트 발생 시
+            if (flameArray[i].flameTimer > 0) { //타이머가 0이상일 경우
+
+                ctx.drawImage(
+                    imgFlame[flameArray[i].flameTimer % 20],
+                    flameArray[i].dx,
+                    flameArray[i].dy,
+                    flameArray[i].dw,
+                    flameArray[i].dh); //타이머 시간동안 재생
+
+                flameArray[i].flameTimer -= 1; //타이머 감소
+
+                if (flameArray[i].flameTimer === 0) // 0일경우 해당 플레임이 끝났으므로 상태를 false로 설정
+                    flameArray[i].flameOn = false;
+            }
+        }
+    }
+
+}
+
 function drawBricks() {
     for(var c=0; c<brickColumnCount; c++) {
         for(var r=0; r<brickRowCount; r++) {
+            var brickX;
+            var brickY;
             if(bricks[c][r].status === 1) {
-                var brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
-                var brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
+                brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
+                brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
                 bricks[c][r].x = brickX;
                 bricks[c][r].y = brickY;
                 ctx.beginPath();
@@ -331,63 +469,117 @@ function drawBricks() {
                  ctx.fill();*/
                 ctx.closePath();
             }
+            if(bricks[c][r].status === 2) {
+                brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
+                brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
+                bricks[c][r].x = brickX;
+                bricks[c][r].y = brickY;
+                ctx.beginPath();
+                ctx.drawImage(imgPieces, 8, 28, 32, 16, brickX, brickY - 12, 63, 24);
+                ctx.closePath();
+            }
+            if(bricks[c][r].status === 3) {
+                brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
+                brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
+                bricks[c][r].x = brickX;
+                bricks[c][r].y = brickY;
+                ctx.beginPath();
+                ctx.drawImage(imgPieces, 8, 48, 32, 16, brickX, brickY - 12, 63, 24);
+                ctx.closePath();
+            }
+            if(bricks[c][r].status === 4) {
+                brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
+                brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
+                bricks[c][r].x = brickX;
+                bricks[c][r].y = brickY;
+                ctx.beginPath();
+                ctx.drawImage(imgPieces, 8, 68, 32, 16, brickX, brickY - 12, 63, 24);
+                ctx.closePath();
+            }
+            if(bricks[c][r].status === 5) {
+                brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
+                brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
+                bricks[c][r].x = brickX;
+                bricks[c][r].y = brickY;
+                ctx.beginPath();
+                ctx.drawImage(imgPieces, 8, 88, 32, 16, brickX, brickY - 12, 63, 24);
+                ctx.closePath();
+            }
+            if(bricks[c][r].status === 6) {
+                brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
+                brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
+                bricks[c][r].x = brickX;
+                bricks[c][r].y = brickY;
+                ctx.beginPath();
+                ctx.drawImage(imgPieces, 8, 108, 32, 16, brickX, brickY - 12, 63, 24);
+                ctx.closePath();
+            }
+            if(bricks[c][r].status > 50){
+                brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
+                brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
+                bricks[c][r].x = brickX;
+                bricks[c][r].y = brickY;
+                ctx.beginPath();
+                ctx.drawImage(imgCustom, 0, 16, 32, 16, brickX, brickY - 12, 63, 24);
+                ctx.closePath();
+            }
         }
     }
 } // 앞서 만들어둔 벽돌 행렬을 토대로 벽돌을 그려냄
 
 function drawScore() {
     ctx.drawImage(imgPieces, 328, 26, 5, 8, canvas.width * 0.02, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 316, 8, 5, 8, canvas.width * 0.03, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 304, 26, 5, 8, canvas.width * 0.04, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 322, 26, 5, 8, canvas.width * 0.05, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 328, 8, 5, 8, canvas.width * 0.06, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 323, 57, 5, 8, canvas.width * 0.07, lifeInterval, 12, 21);
-    imgNumDraw(score % 10, canvas.width * 0.14, lifeInterval);
+    ctx.drawImage(imgPieces, 316, 8, 5, 8, canvas.width * 0.04, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 304, 26, 5, 8, canvas.width * 0.06, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 322, 26, 5, 8, canvas.width * 0.08, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 328, 8, 5, 8, canvas.width * 0.10, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 323, 57, 5, 8, canvas.width * 0.12, lifeInterval, 12, 21);
+    imgNumDraw(score % 10, canvas.width * 0.25, lifeInterval);
     if(score >= 10)
-        imgNumDraw(Math.floor(score / 10 % 10), canvas.width * 0.13, lifeInterval);
+        imgNumDraw(Math.floor(score / 10 % 10), canvas.width * 0.23, lifeInterval);
     if(score >= 100)
-        imgNumDraw(Math.floor(score / 100 % 10), canvas.width * 0.12, lifeInterval);
+        imgNumDraw(Math.floor(score / 100 % 10), canvas.width * 0.21, lifeInterval);
     if(score >= 1000)
-        imgNumDraw(Math.floor(score / 1000 % 10), canvas.width * 0.11, lifeInterval);
+        imgNumDraw(Math.floor(score / 1000 % 10), canvas.width * 0.19, lifeInterval);
     if(score >= 10000)
-        imgNumDraw(Math.floor(score / 10000 % 10), canvas.width * 0.10, lifeInterval);
+        imgNumDraw(Math.floor(score / 10000 % 10), canvas.width * 0.17, lifeInterval);
     if(score >= 100000)
-        imgNumDraw(Math.floor(score / 100000 % 10), canvas.width * 0.09, lifeInterval);
+        imgNumDraw(Math.floor(score / 100000 % 10), canvas.width * 0.15, lifeInterval);
     if(score >= 1000000)
-        imgNumDraw(Math.floor(score / 1000000 % 10), canvas.width * 0.08, lifeInterval);
+        imgNumDraw(Math.floor(score / 1000000 % 10), canvas.width * 0.13, lifeInterval);
     /*ctx.font = "16px Arial";
     ctx.fillStyle = "#dd0091";
     ctx.fillText("Score: "+score, 8, 20);*/
 } // 화면에 벽돌을 파괴해서 얻은 점수를 표시
 
 function drawItem(){
-    ctx.drawImage(imgPieces, 310, 17, 5, 8, canvas.width * 0.463, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 334, 26, 5, 8, canvas.width * 0.47, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 328, 8, 5, 8, canvas.width * 0.48, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 334, 17, 5, 8, canvas.width * 0.49, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 310, 17, 5, 8, canvas.width * 0.426, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 334, 26, 5, 8, canvas.width * 0.44, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 328, 8, 5, 8, canvas.width * 0.46, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 334, 17, 5, 8, canvas.width * 0.48, lifeInterval, 12, 21);
     ctx.drawImage(imgPieces, 323, 57, 5, 8, canvas.width * 0.50, lifeInterval, 12, 21);
-    imgNumDraw(itemUse % 10, canvas.width * 0.52, lifeInterval);
+    imgNumDraw(itemUse % 10, canvas.width * 0.54, lifeInterval);
     if(itemUse >= 10)
-        imgNumDraw(Math.floor(itemUse / 10 % 10), canvas.width * 0.51, lifeInterval);
+        imgNumDraw(Math.floor(itemUse / 10 % 10), canvas.width * 0.52, lifeInterval);
 }
 
 function drawLives() {
-    ctx.drawImage(imgPieces, 328, 17, 5, 8, canvas.width * 0.82, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 311, 17, 5, 8, canvas.width * 0.832, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 334, 8, 5, 8, canvas.width * 0.84, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 328, 8, 5, 8, canvas.width * 0.85, lifeInterval, 12, 21);
-    ctx.drawImage(imgPieces, 323, 57, 5, 8, canvas.width * 0.86, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 328, 17, 5, 8, canvas.width * 0.69, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 311, 17, 5, 8, canvas.width * 0.715, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 334, 8, 5, 8, canvas.width * 0.73, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 328, 8, 5, 8, canvas.width * 0.75, lifeInterval, 12, 21);
+    ctx.drawImage(imgPieces, 323, 57, 5, 8, canvas.width * 0.77, lifeInterval, 12, 21);
 
     if(lives > 0)
-        ctx.drawImage(imgPieces, 120, 135, 9, 8, canvas.width * 0.88, lifeInterval, 36, 24);
+        ctx.drawImage(imgPieces, 120, 135, 10, 9, canvas.width * 0.79, lifeInterval, 36, 25);
     if(lives > 1)
-        ctx.drawImage(imgPieces, 120, 135, 9, 8, canvas.width * 0.90, lifeInterval, 36, 24);
+        ctx.drawImage(imgPieces, 120, 135, 10, 9, canvas.width * 0.83, lifeInterval, 36, 25);
     if(lives > 2)
-        ctx.drawImage(imgPieces, 120, 135, 9, 8, canvas.width * 0.92, lifeInterval, 36, 24);
+        ctx.drawImage(imgPieces, 120, 135, 10, 9, canvas.width * 0.87, lifeInterval, 36, 25);
     if(lives > 3)
-        ctx.drawImage(imgPieces, 120, 135, 9, 8, canvas.width * 0.94, lifeInterval, 36, 24);
+        ctx.drawImage(imgPieces, 120, 135, 10, 9, canvas.width * 0.91, lifeInterval, 36, 25);
     if(lives > 4)
-        ctx.drawImage(imgPieces, 120, 135, 9, 8, canvas.width * 0.96, lifeInterval, 36, 24);
+        ctx.drawImage(imgPieces, 120, 135, 10, 9, canvas.width * 0.95, lifeInterval, 36, 25);
     if(lives > 5){
         lives = 5;
     }
@@ -399,47 +591,106 @@ function drawLives() {
 function draw() {
     ctx.clearRect(200, 0, canvas.width, canvas.height);
     if(gameState === gameStateHome){
-        ctx.drawImage(imgRaincity[Math.floor(time / 9) % 7], 0, 0, canvas.width, canvas.height);
-        ctx.drawImage(imgBreakout, 50, 50, 1054, 525);
         drawBackground1();
-        if(cursorX > 600 && cursorX < 900 && cursorY > 600 && cursorY < 825){
-            drawWaterDrop();
-            if(mouseClicked === 1)
-                gameState = gameStateRound1;
-        }
-        //ctx.drawImage(imgStartButton, 300, 300);
-        //if(mouseClicked > 0 && cursorX =)
     }
-
-
-
-
     if(gameState > 10){
         if(gameState === gameStateRound1){
             drawBackground2();
-            drawBricks();
-            drawBall();
-            drawPaddle();
-            longPaddleItem();
-            drawScore();
-            drawItem();
-            drawLives();
-            collisionDetection();
-            summonItem();
-            if(getItemStatus > 0){
-                dropItem();
+            if(initRound === 0){
+                makeBricks();
+                for(var c=0; c<brickColumnCount / 12; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 1};
+                    }
+                }
+                for(var c=brickColumnCount / 12 * 11; c<brickColumnCount; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 2};
+                    }
+                }
+                for(var r = 0; r < brickColumnCount; r++)
+                    bricks[1][r] = {x: 0, y: 0, status: 200, itemBrick: 100};
+                initRound = 1;
             }
-            autoItem();
-            ballImage();
-            autoMode();
-
-
-            animationHandler(); //애니메이션
-
-            if(equipItem === 2 && itemUse > 0)
-                ctx.drawImage(imgPieces, 66, 136, 8, 8, x - 12, y - 12, 25, 25);
-            // 앞서 생성한 함수들을 호출
         }
+        if(gameState === gameStateRound2){
+            drawBackground3();
+            if(initRound === 1){
+                makeBricks();
+                for(var c=0; c<brickColumnCount / 12; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 1};
+                    }
+                }
+                for(var c=brickColumnCount / 12 * 11; c<brickColumnCount; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 2};
+                    }
+                }
+                initRound = 2;
+            }
+        }
+        if(gameState === gameStateRound3){
+            drawBackground4();
+            if(initRound === 2){
+                makeBricks();
+                for(var c=0; c<brickColumnCount / 12; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 1};
+                    }
+                }
+                for(var c=brickColumnCount / 12 * 11; c<brickColumnCount; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 2};
+                    }
+                }
+                initRound = 3;
+            }
+        }
+        if(gameState === gameStateRound4){
+            drawBackground5();
+            if(initRound === 3){
+                makeBricks();
+                for(var c=0; c<brickColumnCount / 12; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 1};
+                    }
+                }
+                for(var c=brickColumnCount / 12 * 11; c<brickColumnCount; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 2};
+                    }
+                }
+                initRound = 4;
+            }
+        }
+        drawBricks();
+        drawBall();
+        drawPaddle();
+        longPaddleItem();
+        drawScore();
+        drawItem();
+        drawLives();
+        collisionDetection();
+        summonItem();
+        if(getItemStatus > 0){
+            dropItem();
+        }
+        autoItem();
+        ballImage();
+        autoMode();
+
+        animationHandler(); //애니메이션
+        animationHandler2();
+        // 앞서 생성한 함수들을 호출
         if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
             dx = -dx;
             dy *= 1.05;
@@ -549,8 +800,11 @@ function draw() {
         x += dx;
         y += dy;
     }
-    if(gameState === gameStateShop){
-        drawBackground2();
+
+    gameLevelUpCheck();
+
+    if(gameState === gameEnding){
+        drawBackground6();
     }
     //drawStar();
     if(mouseClicked > 0)
@@ -578,8 +832,6 @@ function draw() {
 
 draw(); // draw 함수를 실행하여 실제 게임이 동작 되도록 함
 
-
-
 function imgNumDraw(i, numPositionX, numPositionY){
     ctx.drawImage(imgNum[i].img, imgNum[i].sx, imgNum[i].sy, imgNum[i].sw, imgNum[i].sh, numPositionX, numPositionY, imgNum[i].dw, imgNum[i].dh);
 }
@@ -588,38 +840,6 @@ function getRandomInt(min, max) {
     min = Math.ceil(min);
     max = Math.floor(max);
     return Math.floor(Math.random() * (max - min)) + min; //최댓값은 제외, 최솟값은 포함
-}
-
-function drawStar() {
-    ctx.beginPath();
-    for(var i = 0; i < moveStar; i++){
-        if(moveStar > 80 && moveStar < 200){
-            starLength = i - 100;
-            ctx.arc(840, 420 + starLength, 2, 0, Math.PI * 2);
-        }
-        if (moveStar > 210 && moveStar < 300){
-            starLength = i - 150;
-            ctx.arc(290, 140 + starLength, 2, 0, Math.PI * 2);
-        }
-        if (moveStar > 310 && moveStar < 450) {
-            starLength = i - 200;
-            ctx.arc(980, 590 + starLength, 2, 0, Math.PI * 2);
-        }
-        if (moveStar > 460 && moveStar < 540){
-            starLength = i - 250;
-            ctx.arc(700, 460 + starLength, 2, 0, Math.PI * 2);
-        }
-        if (moveStar > 550 && moveStar < 600) {
-            starLength = i - 300;
-            ctx.arc(530, 450 + starLength, 2, 0, Math.PI * 2);
-        }
-    }
-    moveStar++;
-    if(moveStar > 800)
-        moveStar = 0;
-    ctx.fillStyle = "#d3ffff";
-    ctx.fill();
-    ctx.closePath();
 }
 
 function summonItem() {
@@ -631,11 +851,15 @@ function summonItem() {
             else if(randomValue > 100 && randomValue <= 350)
                 getItemStatus = 2;
             else if(randomValue > 350 && randomValue <= 500)
-                getItemStatus = 2;
+                getItemStatus = 3;
             else if(randomValue > 500 && randomValue <= 700)
-                getItemStatus = 2;
-            else if(randomValue > 750 && randomValue <= 1000)
-                getItemStatus = 2;
+                getItemStatus = 4;
+            else if(randomValue > 700 && randomValue <= 850)
+                getItemStatus = 5;
+            else if(randomValue > 850 && randomValue <= 950)
+                getItemStatus = 6;
+            else if(randomValue > 950 && randomValue <= 1000)
+                getItemStatus = 7;
         }
         breakBrick = 0;
     }
@@ -648,14 +872,18 @@ function dropItem() {
     }
     itemPosY += 3;
     if(getItemStatus === 1){
-        ctx.drawImage(imgCustom, 32, 0, 15, 15, itemPosX, itemPosY, 30, 30);
+        ctx.drawImage(imgCustom, 32, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
+            if(lives === 5)
+                score *= 1.2;
             lives++;
+            getItemStatus = 0;
+            itemUse = 0;
             itemPosY = 10000;
         }
     }
     if(getItemStatus === 2){
-        ctx.drawImage(imgCustom, 0, 0, 15, 15, itemPosX, itemPosY, 30, 30);
+        ctx.drawImage(imgCustom, 0, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
             equipItem = 2;
             itemUse = 6;
@@ -663,7 +891,7 @@ function dropItem() {
         }
     }
     if(getItemStatus === 3){
-        ctx.drawImage(imgCustom, 48, 0, 15, 15, itemPosX, itemPosY, 30, 30);
+        ctx.drawImage(imgCustom, 48, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
             equipItem = 3;
             itemUse = 9;
@@ -671,7 +899,7 @@ function dropItem() {
         }
     }
     if(getItemStatus === 4){
-        ctx.drawImage(imgCustom, 16, 0, 15, 15, itemPosX, itemPosY, 30, 30);
+        ctx.drawImage(imgCustom, 16, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
             equipItem = 4;
             itemUse = 15;
@@ -679,11 +907,29 @@ function dropItem() {
         }
     }
     if(getItemStatus === 5){
-        ctx.drawImage(imgCustom, 80, 0, 15, 15, itemPosX, itemPosY, 30, 30);
+        ctx.drawImage(imgCustom, 80, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height && getItemStatus === 5){
             dx = dx * 0.7;
             dy = dx * 0.7;
             getItemStatus = 0;
+            itemUse = 0;
+            itemPosY = 10000;
+        }
+    }
+    if(getItemStatus === 6){
+        ctx.drawImage(imgCustom, 128, 0, 16, 16, itemPosX, itemPosY, 30, 30);
+        if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
+            equipItem = 6;
+            itemUse = 10;
+            itemPosY = 10000;
+        }
+    }
+    if(getItemStatus === 7){
+        ctx.drawImage(imgCustom, 144, 0, 16, 16, itemPosX, itemPosY, 30, 30);
+        if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
+            itemUse = 1;
+            beforeLevel = gameState;
+            gameState = gameStateLevelUp;
             itemPosY = 10000;
         }
     }
@@ -692,6 +938,8 @@ function dropItem() {
         itemPosY = 0;
         getItemStatus = 0;
     }
+    if(itemUse < 0)
+        equipItem = 0;
     if(equipItem < 1)
         itemUse = 0;
 }
@@ -712,24 +960,27 @@ function longPaddleItem(){
 
 function ballImage(){
     if(itemUse > 0){
-        if(getItemStatus === 2)
-            ctx.drawImage(imgPieces, 66, 136, 8, 8, x - 11, y - 11, 23, 23);
+        if(equipItem === 2)
+            ctx.drawImage(imgPieces, 66, 136, 8, 8, x - 12, y - 12, 25, 25);
+        if(equipItem === 3){
+            autoPaddle = getRandomInt(1,6);
+            if(autoPaddle === 1)
+                ctx.drawImage(imgPieces, 76, 151, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
+            if(autoPaddle === 2)
+                ctx.drawImage(imgPieces, 8, 151, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
+            if(autoPaddle === 3)
+                ctx.drawImage(imgPieces, 212, 151, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
+            if(autoPaddle === 4)
+                ctx.drawImage(imgPieces, 8, 175, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
+            if(autoPaddle === 5)
+                ctx.drawImage(imgPieces, 76, 175, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
+            if(autoPaddle === 6)
+                ctx.drawImage(imgPieces, 144, 175, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
+        }
+        if(equipItem === 6)
+            ctx.drawImage(imgPieces, 48, 136, 8, 8, x - 12, y - 12, 25, 25);
     }
-    if(equipItem === 3 && itemUse > 0){
-        autoPaddle = getRandomInt(1,6);
-        if(autoPaddle === 1)
-            ctx.drawImage(imgPieces, 76, 151, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
-        if(autoPaddle === 2)
-            ctx.drawImage(imgPieces, 8, 151, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
-        if(autoPaddle === 3)
-            ctx.drawImage(imgPieces, 212, 151, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
-        if(autoPaddle === 4)
-            ctx.drawImage(imgPieces, 8, 175, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
-        if(autoPaddle === 5)
-            ctx.drawImage(imgPieces, 76, 175, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
-        if(autoPaddle === 6)
-            ctx.drawImage(imgPieces, 144, 175, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
-    }
+
 }
 
 function autoMode(){
@@ -739,20 +990,76 @@ function autoMode(){
         if(itemPosY > canvas.height - 40 && itemPosY < canvas.height)
             paddleX = itemPosX - getRandomInt(1 , paddleWidth);
         ctx.drawImage(imgPieces, 304, 8, 5, 8, canvas.width * 0.02, canvas.height - 3 * lifeInterval, 18, 31.5);
-        ctx.drawImage(imgPieces, 340, 26, 5, 8, canvas.width * 0.035, canvas.height - 3 * lifeInterval, 18, 31.5);
-        ctx.drawImage(imgPieces, 334, 26, 5, 8, canvas.width * 0.05, canvas.height - 3 * lifeInterval, 18, 31.5);
-        ctx.drawImage(imgPieces, 304, 26, 5, 8, canvas.width * 0.065, canvas.height - 3 * lifeInterval, 18, 31.5);
+        ctx.drawImage(imgPieces, 340, 26, 5, 8, canvas.width * 0.05, canvas.height - 3 * lifeInterval, 18, 31.5);
+        ctx.drawImage(imgPieces, 334, 26, 5, 8, canvas.width * 0.075, canvas.height - 3 * lifeInterval, 18, 31.5);
+        ctx.drawImage(imgPieces, 304, 26, 5, 8, canvas.width * 0.10, canvas.height - 3 * lifeInterval, 18, 31.5);
     }
 }
 
+function gameLevelUpCheck(){
+    if(gameState === 2){
+        ctx.drawImage(imgPortal[Math.floor(time / 2 ) % 39], 0, 0, 500, 500, 0, 0, canvas.width, canvas.height);
+        gameStartTimer++;
+        if(beforeLevel === 0){
+            if(gameStartTimer > 0 && gameStartTimer < 30)
+                ctx.drawImage(imgRound1, 0, 0, 560, 161, 80, 400, 560, 161);
+            if(gameStartTimer > 30 && gameStartTimer < 50)
+                ctx.drawImage(imgRound1, 0, 162, 560, 161, -70, 400, 840, 242);
+            if(gameStartTimer > 50){
+                gameStartTimer = 0;
+                gameState = beforeLevel + 1;
+                if(beforeLevel === 0)
+                    gameState = gameStateRound1;
+            }
+        }
+        if(beforeLevel === 11){
+            if(gameStartTimer > 0 && gameStartTimer < 30)
+                ctx.drawImage(imgRound2, 0, 0, 560, 161, 80, 400, 560, 161);
+            if(gameStartTimer > 30 && gameStartTimer < 50)
+                ctx.drawImage(imgRound2, 0, 162, 560, 161, -70, 400, 840, 242);
+            if(gameStartTimer > 50){
+                gameStartTimer = 0;
+                gameState = beforeLevel + 1;
+            }
+        }
+        if(beforeLevel === 12){
+            if(gameStartTimer > 0 && gameStartTimer < 30)
+                ctx.drawImage(imgRound3, 0, 0, 560, 161, 80, 400, 560, 161);
+            if(gameStartTimer > 30 && gameStartTimer < 50)
+                ctx.drawImage(imgRound3, 0, 162, 560, 161, -70, 400, 840, 242);
+            if(gameStartTimer > 50){
+                gameStartTimer = 0;
+                gameState = beforeLevel + 1;
+            }
+        }
+        if(beforeLevel === 13){
+            if(gameStartTimer > 0 && gameStartTimer < 30)
+                ctx.drawImage(imgRound4, 0, 0, 560, 161, 80, 400, 560, 161);
+            if(gameStartTimer > 30 && gameStartTimer < 50)
+                ctx.drawImage(imgRound4, 0, 162, 560, 161, -70, 400, 840, 242);
+            if(gameStartTimer > 50){
+                gameStartTimer = 0;
+                gameState = beforeLevel + 1;
+            }
+        }
+        if(beforeLevel === 14){
+            ctx.drawImage(imgWin, 100, 0, 560, 161, 20, 400, 560, 161);
+            if(gameStartTimer > 50){
+                roundReset();
+                gameStartTimer = 0;
+                gameState = gameEnding;
+            }
+        }
+    }
+}
 document.onmousemove = function(e){
     cursorX = e.pageX;
     cursorY = e.pageY;
 }
 
 canvas.addEventListener('click',(arg)=>{
-    console.log("x = " + x);
-    console.log("y = " + y);
+    console.log("beforeLevel = " + beforeLevel);
+    console.log("gameState = " + gameState);
     mouseClicked++;
 });
 
