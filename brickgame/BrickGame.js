@@ -17,6 +17,7 @@ var paddleX = (canvas.width-paddleWidth) / 2;
 var rightPressed = false;
 var leftPressed = false;
 var aPressed = false;
+var rPressed = false;
 var brickRowCount = 12;
 var brickColumnCount = 12;
 var brickWidth = 60;
@@ -85,12 +86,6 @@ var imgRaindrop = [];
 for(var i  = 0; i < 29; i ++){
     imgRaindrop[i] = new Image();
     imgRaindrop[i].src = "gif/raindrop/raindrop" + i + ".png";
-}
-
-var imgDeadlyMoons = [];
-for(var i  = 0; i < 23; i ++){
-    imgDeadlyMoons[i] = new Image();
-    imgDeadlyMoons[i].src = "gif/DeadlyMoon/deadlyMoon" + i + ".png";
 }
 
 var imgRaincity = [];
@@ -190,6 +185,7 @@ rainSound.loop = true;
 var getItemSound = new Audio("sounds/getItem.mp3");
 var portalSound = new Audio("sounds/portal.mp3");
 var levelUpSound = new Audio("sounds/levelUp.ogg");
+var thunderSound = new Audio("sounds/thunder3.ogg");
 
 var collisionSounds = [];
 for(i = 0; i < 6; i++)
@@ -265,14 +261,7 @@ function keyDownHandler(e) {
         dy *= 1.2;
     }
     else if(e.key === "r" || e.key === "R") {
-        score = 0;
-        gameState = gameStateHome;
-        backgroundMusic.pause();
-        rainSound.pause();
-        lives = 3;
-        equipItem = 0;
-        itemUse = 0;
-        getItemStatus = 0;
+        rPressed = true;
     }
 }
 
@@ -398,10 +387,6 @@ function collisionDetection() {
                         score++;
                     if(dx > 29 || dy > 29 || dx < -29 || dy < -29)
                         score += 3;
-                    /*if(score === brickRowCount * brickColumnCount) {
-                        alert("YOU WIN, CONGRATS!");
-                        document.location.reload();
-                    }*/
                 }
             }
         }
@@ -411,19 +396,12 @@ function collisionDetection() {
 function drawBall() {
     ctx.beginPath();
     ctx.drawImage(imgPieces, 84, 136, 8, 8, x - 10, y - 10, 21, 21);
-    //ctx.drawImage(imgBallPokeball, x - 13, y - 12, 22, 22);
-    /*ctx.arc(x, y, ballRadius, 0, Math.PI*2);
-    ctx.fillStyle = "#0095DD";
-    ctx.fill();*/
     ctx.closePath();
 } // 벽돌을 부숴줄 공을 생성
 
 function drawPaddle() {
     ctx.beginPath();
     ctx.drawImage(imgPieces, 144, 151, 64, 19, paddleX, canvas.height - paddleHeight - 8, 64 * paddleWidth / 65, 19 * paddleHeight / 10);
-    /*    ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
-        ctx.fillStyle = "#0095DD";
-        ctx.fill();*/
     ctx.closePath();
 } // 튕겨져나온 공을 받아칠 패들을 생성
 
@@ -700,6 +678,15 @@ function drawBricks() {
                 ctx.drawImage(imgPieces, 8, 108, 32, 16, brickX, brickY - 12, 63, 24);
                 ctx.closePath();
             }
+            if(bricks[c][r].status === 7) {
+                brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
+                brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
+                bricks[c][r].x = brickX;
+                bricks[c][r].y = brickY;
+                ctx.beginPath();
+                ctx.drawImage(imgPieces, 8, 128, 32, 16, brickX, brickY - 12, 63, 24);
+                ctx.closePath();
+            }
             if(bricks[c][r].status > 50){
                 brickX = (r*(brickWidth+brickPadding))+brickOffsetLeft;
                 brickY = (c*(brickHeight+brickPadding))+brickOffsetTop;
@@ -769,9 +756,6 @@ function drawLives() {
     if(lives > 5){
         lives = 5;
     }
-    /*ctx.font = "16px Arial";
-    ctx.fillStyle = "#dd00aa";
-    ctx.fillText("Lives: "+lives, canvas.width-65, 20);*/
 } // 화면에 플레이어의 남은 목숨의 수를 표시
 
 function draw() {
@@ -805,18 +789,28 @@ function draw() {
             drawBackground3();
             if(initRound === 1){
                 makeBricks();
-                for(var c=0; c<brickColumnCount / 12; c++) {
+                for(var c=0; c<brickColumnCount / 12 * 3; c++) {
                     bricks[c] = [];
                     for(var r=0; r<brickRowCount; r++) {
                         bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 1};
                     }
                 }
-                for(var c=brickColumnCount / 12 * 11; c<brickColumnCount; c++) {
+                for(var c=brickColumnCount / 12 * 5; c<brickColumnCount / 12 * 7; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 3, itemBrick: 2};
+                    }
+                }
+                for(var c=brickColumnCount / 12 * 9; c<brickColumnCount; c++) {
                     bricks[c] = [];
                     for(var r=0; r<brickRowCount; r++) {
                         bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 2};
                     }
                 }
+                bricks[1][4] = {x: 0, y: 0, status: 200, itemBrick: 100};
+                bricks[1][5] = {x: 0, y: 0, status: 200, itemBrick: 100};
+                bricks[1][6] = {x: 0, y: 0, status: 200, itemBrick: 100};
+                bricks[1][7] = {x: 0, y: 0, status: 200, itemBrick: 100};
                 initRound = 2;
             }
         }
@@ -824,18 +818,28 @@ function draw() {
             drawBackground4();
             if(initRound === 2){
                 makeBricks();
-                for(var c=0; c<brickColumnCount / 12; c++) {
+                for(var c=0; c<brickColumnCount / 12 * 3; c++) {
                     bricks[c] = [];
                     for(var r=0; r<brickRowCount; r++) {
-                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 1};
+                        bricks[c][r] = { x: 0, y: 0, status: 3, itemBrick: 1};
                     }
                 }
-                for(var c=brickColumnCount / 12 * 11; c<brickColumnCount; c++) {
+                for(var c=brickColumnCount / 12 * 5; c<brickColumnCount / 12 * 7; c++) {
                     bricks[c] = [];
                     for(var r=0; r<brickRowCount; r++) {
-                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 2};
+                        bricks[c][r] = { x: 0, y: 0, status: 4, itemBrick: 2};
                     }
                 }
+                for(var c=brickColumnCount / 12 * 10; c<brickColumnCount; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 3, itemBrick: 2};
+                    }
+                }
+                bricks[1][5] = {x: 0, y: 0, status: 200, itemBrick: 100};
+                bricks[1][6] = {x: 0, y: 0, status: 200, itemBrick: 100};
+                bricks[4][1] = {x: 0, y: 0, status: 200, itemBrick: 100};
+                bricks[4][10] = {x: 0, y: 0, status: 200, itemBrick: 100};
                 initRound = 3;
             }
         }
@@ -843,18 +847,50 @@ function draw() {
             drawBackground5();
             if(initRound === 3){
                 makeBricks();
-                for(var c=0; c<brickColumnCount / 12; c++) {
+                for(var c=0; c<brickColumnCount / 12 * 3; c++) {
                     bricks[c] = [];
                     for(var r=0; r<brickRowCount; r++) {
-                        bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 1};
+                        bricks[c][r] = { x: 0, y: 0, status: 7, itemBrick: 1};
                     }
                 }
-                for(var c=brickColumnCount / 12 * 11; c<brickColumnCount; c++) {
+                for(var c=brickColumnCount / 12 * 3; c<brickColumnCount / 12 * 5; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 6, itemBrick: 2};
+                    }
+                }
+                for(var c=brickColumnCount / 12 * 5; c<brickColumnCount / 12 * 6; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 5, itemBrick: 2};
+                    }
+                }
+                for(var c=brickColumnCount / 12 * 6; c<brickColumnCount / 12 * 7; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 4, itemBrick: 2};
+                    }
+                }
+                for(var c=brickColumnCount / 12 * 7; c<brickColumnCount / 12 * 8; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 3, itemBrick: 2};
+                    }
+                }
+                for(var c=brickColumnCount / 12 * 8; c<brickColumnCount / 12 * 9; c++) {
                     bricks[c] = [];
                     for(var r=0; r<brickRowCount; r++) {
                         bricks[c][r] = { x: 0, y: 0, status: 2, itemBrick: 2};
                     }
                 }
+                for(var c=brickColumnCount / 12 * 9; c<brickColumnCount; c++) {
+                    bricks[c] = [];
+                    for(var r=0; r<brickRowCount; r++) {
+                        bricks[c][r] = { x: 0, y: 0, status: 1, itemBrick: 2};
+                    }
+                }
+                bricks[1][0] = {x: 0, y: 0, status: 200, itemBrick: 100};
+                bricks[1][11] = {x: 0, y: 0, status: 200, itemBrick: 100};
                 initRound = 4;
             }
         }
@@ -946,11 +982,8 @@ function draw() {
                 lives--;
                 gameRestartTimer = 0;
                 if(!lives) {
-                    draw();
-                    setTimeout(function() {
-                        alert("GAME OVER");
-                        document.location.reload()
-                    }, 1);
+                    thunderSound.play().catch(function(e){});
+                    rPressed = true;
                 }
                 else {
                     x = canvas.width / 2;
@@ -961,13 +994,6 @@ function draw() {
                 }
             }
         }
-        // 공이 바닥에 닿으면 게임오버
-        /*if(rightPressed && paddleX < canvas.width-paddleWidth) {
-            paddleX += 7;
-        }
-        else if(leftPressed && paddleX > 0) {
-            paddleX -= 7;
-        }*/ // 키보드 입력으로 패들을 움직일 경우 패들의 속도를 지정하는 부분
 
         if(paddleX < 0) {
             paddleX += 5;
@@ -992,6 +1018,19 @@ function draw() {
         x += dx;
         y += dy;
     }
+
+    if(rPressed){
+        score = 0;
+        gameState = gameStateHome;
+        backgroundMusic.pause();
+        rainSound.pause();
+        endTime = -100;
+        rPressed = false;
+    }
+    if(endTime < 0)
+        endTime++;
+    if(endTime === -1)
+        document.location.reload();
 
     gameLevelUpCheck();
 
@@ -1063,9 +1102,9 @@ function summonItem() {
                 getItemStatus = 4;
             else if(randomValue > 700 && randomValue <= 850)
                 getItemStatus = 5;
-            else if(randomValue > 850 && randomValue <= 950)
+            else if(randomValue > 850 && randomValue <= 980)
                 getItemStatus = 6;
-            else if(randomValue > 950 && randomValue <= 1000)
+            else if(randomValue > 980 && randomValue <= 1000)
                 getItemStatus = 7;
         }
         breakBrick = 0;
