@@ -1313,14 +1313,6 @@ document.onmousemove = function(e){
 }
 
 canvas.addEventListener('click',(arg)=>{
-    console.log("beforeLevel = " + beforeLevel);
-    console.log("gameState = " + gameState);
     mouseClicked++;
     gameRestartTimer++;
 });
-
-
-/*setInterval(checkCursor, 1000);
-function checkCursor(){
-    alert("Cursor at: " + cursorX + ", " + cursorY);
-}*/
