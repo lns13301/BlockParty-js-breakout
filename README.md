@@ -78,3 +78,7 @@
         - https://kirokazepixel.tumblr.com/post/179351177975/background-commissioned-for-the-puzzle-game-block
     - 각종 gif 출처
         - https://www.tumblr.com/search/pixel+background+gif
+    - 배경음악
+        - https://bgmstore.net/view/5bb0d13f352039d2270a759e/[%EC%9E%90%EC%9E%91%EA%B3%A1]%20%EC%9D%8C%EC%9C%A0%20-%20Sakuria%20(%EB%B9%84%ED%8A%B8,%20%EB%8D%A5%EC%8A%A4%ED%85%9D,%20%EC%9D%BC%EB%A0%89,%20%EC%8B%A0%EB%82%A8,%20%ED%9D%A5%EA%B2%A8%EC%9B%80,%20%EB%B9%84%EC%9E%A5,%20%ED%81%B4%EB%9F%BD)
+    - 효과음
+        - minecraft
