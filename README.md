@@ -3,8 +3,13 @@
 ## 준비사항
 - html5
 - javascript
+- Chrome
 
- ## 협업툴
+## 게임 아이템 안내
+
+<img src="imgs/ItemInfo.png">
+
+## 협업툴
  - slack(https://app.slack.com/client/TNZ5B3MFZ/CNKQR8E7M)
 
 ## GameTheme(게임 테마)
@@ -21,6 +26,8 @@
     - [X] 함수 분석
     - [X] 작동 원리 이해
     - [ ] ppt 제작
+     - [X] 코드분석
+     - [ ] 계획안
 - 기능 추가하기
     - [X] 패들이 끝이 화면 바깥으로 나가려고하면 더 이상 못가도록 수정
     - [X] 공, 패들, 벽돌, 배경 이미지 수정
