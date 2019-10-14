@@ -53,6 +53,10 @@ var time = 0;
 var initRound = 0;
 var beforeLevel = 0;
 var gameStartTimer = -1;
+var particleNum = 0;
+var gameRestartTimer = 0;
+var endTime = 0;
+var bellCount = 0;
 
 var gameState = gameStateHome;
 
@@ -64,6 +68,11 @@ for(var i = 0; i < 6; i++){
 var flameArray = [];
 for(var i = 0; i < 10; i++){
     flameArray.push({ flameTimer: 0, dx: 0, dy: 0, dw: 0, dh: 0, flameOn: false });
+} // 폭발탄 효과 배열
+
+var particleArray = [];
+for(var i = 0; i < 12; i++){
+    particleArray.push({ particleTimer: 0, dx: 0, dy: 0, dw: 0, dh: 0, particleOn: false });
 } // 폭발탄 효과 배열
 
 var imgPortal = [];
@@ -132,6 +141,12 @@ for(var i  = 0; i < 21; i ++){
     imgFlame[i].src = "gif/flame/flame-" + i + ".png";
 }
 
+var imgParticle = [];
+for(var i  = 0; i < 12; i ++){
+    imgParticle[i] = new Image();
+    imgParticle[i].src = "gif/particle/particle" + i + ".png";
+}
+
 var imgPieces = new Image();
 imgPieces.src = "img/breakout_pieces.png";
 
@@ -162,6 +177,34 @@ imgRound4.src = "img/round4.png";
 
 var imgWin = new Image();
 imgWin.src = "img/win.png";
+
+
+var backgroundMusic = new Audio("sounds/Sakuria.mp3");
+backgroundMusic.controls = true;
+backgroundMusic.loop = true;
+
+var rainSound = new Audio("sounds/rain1.ogg");
+rainSound.controls = true;
+rainSound.loop = true;
+
+var getItemSound = new Audio("sounds/getItem.mp3");
+var portalSound = new Audio("sounds/portal.mp3");
+var levelUpSound = new Audio("sounds/levelUp.ogg");
+
+var collisionSounds = [];
+for(i = 0; i < 6; i++)
+    collisionSounds[i] = new Audio("sounds/bit.ogg");
+collisionSounds[6] = 0;
+var brickHitSounds = [];
+for(i = 0; i < 6; i++)
+    brickHitSounds[i] = new Audio("sounds/break1.ogg");
+brickHitSounds[6] = 0;
+var explosionSounds = [];
+for(i = 0; i < 6; i++)
+    explosionSounds[i] = new Audio("sounds/explode2.ogg");
+var flameSounds = [];
+for(i = 0; i < 10; i++)
+    flameSounds[i] = new Audio("sounds/twinkle_far1.ogg");
 
 var imgNum = [];
 imgNum.push({"img":imgPieces, "sx":304, "sy":48, "sw":5, "sh":8, "numPosX":numPositionX, "numPosY":numPositionY, "dw":12, "dh":21});
@@ -209,17 +252,27 @@ function keyDownHandler(e) {
     else if(e.key === "Left" || e.key === "ArrowLeft") {
         leftPressed = true;
     }
-    else if(e.key === "a" || e.key === "ㅁ" || e.key === "A") {
+    else if(e.key === "a"|| e.key === "A") {
         if(aPressed) aPressed = false;
         else aPressed = true;
     }
-    else if(e.key === "n" || e.key === "ㅜ" || e.key === "N") {
+    else if(e.key === "n"|| e.key === "N") {
         beforeLevel = gameState;
         gameState = gameStateLevelUp
     }
-    else if(e.key === "t" || e.key === "T" || e.key === "ㅅ") {
+    else if(e.key === "t"|| e.key === "T") {
         dx *= 1.2;
         dy *= 1.2;
+    }
+    else if(e.key === "r" || e.key === "R") {
+        score = 0;
+        gameState = gameStateHome;
+        backgroundMusic.pause();
+        rainSound.pause();
+        lives = 3;
+        equipItem = 0;
+        itemUse = 0;
+        getItemStatus = 0;
     }
 }
 
@@ -246,6 +299,18 @@ function collisionDetection() {
             var b = bricks[c][r];
             if(b.status > 0) {
                 if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
+                    if(b.status === 1){
+                        particleArray[particleNum].particleOn = true;
+                        particleArray[particleNum].particleTimer = 12;
+
+                        particleArray[particleNum].dx =  x - 80;
+                        particleArray[particleNum].dy =  y - 70;
+                        particleArray[particleNum].dw = 150;
+                        particleArray[particleNum].dh = 100;
+                        particleNum++;
+                        if(particleNum > 11)
+                            particleNum = 0;
+                    }
                     if(b.status > 30 && time > 600){
                         getItemStatus = 0;
                         itemPosY = 0;
@@ -253,6 +318,7 @@ function collisionDetection() {
                         time = 0;
                     }
                     dy = -dy;
+                    brickHitSounds[brickHitSounds[6]++ % 6].play().catch(function(e){});
                     b.status--;
                     breakBrick++;
                     if(b.status > 0)
@@ -304,6 +370,7 @@ function collisionDetection() {
                             explosionArray[itemUse - 1].dy =  y - 100;
                             explosionArray[itemUse - 1].dw = 200;
                             explosionArray[itemUse - 1].dh = 200;
+                            explosionSounds[itemUse - 1].play().catch(function(e){});
                         } //  폭발탄 발생 시 발생하는 이벤트 처리 및 폭발 위치 지정
                         if(equipItem === 6 && itemUse > 0){
                             flameArray[itemUse - 1].flameOn = true;
@@ -313,6 +380,7 @@ function collisionDetection() {
                             flameArray[itemUse - 1].dy =  y - 220;
                             flameArray[itemUse - 1].dw = 300;
                             flameArray[itemUse - 1].dh = 200;
+                            flameSounds[itemUse - 1].play().catch(function(e){});
                             if(b.status < 30)
                                 b.status = 0;
                         }
@@ -358,6 +426,15 @@ function drawPaddle() {
         ctx.fill();*/
     ctx.closePath();
 } // 튕겨져나온 공을 받아칠 패들을 생성
+
+function musicOn(){
+    if(gameState > 10)
+        backgroundMusic.play().catch(function(e){});
+    if(gameState < 13 && gameState > 10)
+        rainSound.play().catch(function (e){});
+    if(gameState > 12 || gameState < 11)
+        rainSound.pause();
+}
 
 function drawWaterDrop(){
     ctx.beginPath();
@@ -405,6 +482,96 @@ function drawBackground5() {
 function drawBackground6() {
     ctx.beginPath();
     ctx.drawImage(imgGameEnding[Math.floor(time / 3) % 31], 0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "rgb(255,249,248)";
+    ctx.font = '90px Fantasy';
+    ctx.textBaseline = "top";
+    ctx.fillText("Your score is...", canvas.width * 0.1, canvas.height * 0.1);
+    ctx.fillStyle = "rgba(255,237,203,0.61)";
+    ctx.font = '80px Fantasy';
+    ctx.textBaseline = "top";
+    ctx.fillText("Restart to press 'r'", canvas.width * 0.1, canvas.height * 0.8);
+    if(endTime === 0){
+        endTime = time;
+        bellCount++;
+    }
+    if(bellCount > 0 && bellCount < 8 && time % 50 === endTime % 50){
+        if(bellCount === 1 || score % 10 > 1){
+            levelUpSound.play().catch(function(e){});
+        }
+        if(bellCount === 2 || score % 100 > 1){
+            levelUpSound.play().catch(function(e){});
+        }
+        if(bellCount === 3 || score % 1000 > 1){
+            levelUpSound.play().catch(function(e){});
+        }
+        if(bellCount === 4 || score % 10000 > 1){
+            levelUpSound.play().catch(function(e){});
+        }
+        if(bellCount === 5 || score % 100000 > 1){
+            levelUpSound.play().catch(function(e){});
+        }
+        if(bellCount === 6 || score % 1000000 > 1){
+            levelUpSound.play().catch(function(e){});
+        }
+        if(bellCount === 7 || score % 10000000 > 1){
+            levelUpSound.play().catch(function(e){});
+        }
+        bellCount++;
+    }
+    if(time > endTime + 50){
+        ctx.fillStyle = "rgb(255,249,248)";
+        ctx.font = '90px Fantasy';
+        ctx.textBaseline = "top";
+        ctx.fillText(" " + Math.floor(score % 10), canvas.width * 0.7, canvas.height * 0.5);
+    }
+    if(time > endTime + 100){
+        if(score >= 10){
+            ctx.fillStyle = "rgb(255,249,248)";
+            ctx.font = '90px Fantasy';
+            ctx.textBaseline = "top";
+            ctx.fillText(" " + Math.floor(score / 10 % 10), canvas.width * 0.6, canvas.height * 0.5);
+        }
+    }
+    if(time > endTime + 150){
+        if(score >= 100){
+            ctx.fillStyle = "rgb(255,249,248)";
+            ctx.font = '90px Fantasy';
+            ctx.textBaseline = "top";
+            ctx.fillText(" " + Math.floor(score / 100 % 10), canvas.width * 0.5, canvas.height * 0.5);
+        }
+    }
+    if(time > endTime + 200){
+        if(score >= 1000){
+            ctx.fillStyle = "rgb(255,249,248)";
+            ctx.font = '90px Fantasy';
+            ctx.textBaseline = "top";
+            ctx.fillText(" " + Math.floor(score / 1000 % 10), canvas.width * 0.4, canvas.height * 0.5);
+        }
+    }
+    if(time > endTime + 250){
+        if(score >= 10000){
+            ctx.fillStyle = "rgb(255,249,248)";
+            ctx.font = '90px Fantasy';
+            ctx.textBaseline = "top";
+            ctx.fillText(" " + Math.floor(score / 10000 % 10), canvas.width * 0.3, canvas.height * 0.5);
+        }
+    }
+    if(time > endTime + 300){
+        if(score >= 100000){
+            ctx.fillStyle = "rgb(255,249,248)";
+            ctx.font = '90px Fantasy';
+            ctx.textBaseline = "top";
+            ctx.fillText(" " + score / Math.floor(100000 % 10), canvas.width * 0.2, canvas.height * 0.5);
+        }
+    }
+    if(time > endTime + 350) {
+        if (score >= 1000000) {
+            ctx.fillStyle = "rgb(255,249,248)";
+            ctx.font = '90px Fantasy';
+            ctx.textBaseline = "top";
+            ctx.fillText(" " + score / Math.floor(1000000 % 10), canvas.width * 0.1, canvas.height * 0.5);
+        }
+    }
     ctx.closePath();
 }
 
@@ -427,7 +594,6 @@ function animationHandler() {
             }
         }
     }
-
 }
 
 function animationHandler2() {
@@ -449,7 +615,27 @@ function animationHandler2() {
             }
         }
     }
+}
 
+function animationHandler3() {
+    for (var i =0 ; i < 12; i++){
+        if (particleArray[i].particleOn === true){
+            if (particleArray[i].particleTimer > 0) {
+
+                ctx.drawImage(
+                    imgParticle[particleArray[i].particleTimer % 12],
+                    particleArray[i].dx,
+                    particleArray[i].dy,
+                    particleArray[i].dw,
+                    particleArray[i].dh);
+
+                particleArray[i].particleTimer -= 1;
+
+                if (particleArray[i].particleTimer === 0)
+                    particleArray[i].particleOn = false;
+            }
+        }
+    }
 }
 
 function drawBricks() {
@@ -690,13 +876,17 @@ function draw() {
 
         animationHandler(); //애니메이션
         animationHandler2();
+        animationHandler3();
+        musicOn();
         // 앞서 생성한 함수들을 호출
         if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+            collisionSounds[collisionSounds[6]++ % 6].play().catch(function(e){});
             dx = -dx;
             dy *= 1.05;
             // 튕긴 후 속도
         }
         if(y + dy < ballRadius) {
+            collisionSounds[collisionSounds[6]++ % 6].play().catch(function(e){});
             dy = -dy;
             dx *= 1.2;
             // 튕긴 후 속도
@@ -704,6 +894,7 @@ function draw() {
         // 공이 벽을 닿으면 반대방향으로 이동하도록 좌표를 수정
         else if(y + dy > canvas.height-ballRadius - 6) {
             if(x > paddleX && x < paddleX + paddleWidth + 16) {
+                collisionSounds[collisionSounds[6]++ % 6].play().catch(function(e){});
                 if(paddleWidth / (x - paddleX) >= 20){
                     dx = -ballSpeed;
                     dx = dx * 1.5;
@@ -753,6 +944,7 @@ function draw() {
             }
             else {
                 lives--;
+                gameRestartTimer = 0;
                 if(!lives) {
                     draw();
                     setTimeout(function() {
@@ -761,8 +953,8 @@ function draw() {
                     }, 1);
                 }
                 else {
-                    x = canvas.width/2;
-                    y = canvas.height-30;
+                    x = canvas.width / 2;
+                    y = canvas.height - 70;
                     dx = ballSpeed;
                     dy = -ballSpeed;
                     paddleX = (canvas.width-paddleWidth)/2;
@@ -806,10 +998,21 @@ function draw() {
     if(gameState === gameEnding){
         drawBackground6();
     }
-    //drawStar();
     if(mouseClicked > 0)
         mouseClicked = 0;
     time++;
+    if(gameRestartTimer === 0 && gameState > 10){
+        itemUse = 0;
+        equipItem = 0;
+        x = canvas.width / 2;
+        y = canvas.height - 70;
+        getItemStatus = 0;
+        itemPosY = 0;
+        ctx.fillStyle = "rgba(255,242,206,0.62)";
+        ctx.font = '40px Fantasy';
+        ctx.textBaseline = "top";
+        ctx.fillText("Left Click to shot ball", canvas.width * 0.25, canvas.height * 0.8);
+    }
     if(dx > 0 && dx < 5)
         dx = 5;
     if(dx > -5 && dx < 0)
@@ -834,6 +1037,10 @@ draw(); // draw 함수를 실행하여 실제 게임이 동작 되도록 함
 
 function imgNumDraw(i, numPositionX, numPositionY){
     ctx.drawImage(imgNum[i].img, imgNum[i].sx, imgNum[i].sy, imgNum[i].sw, imgNum[i].sh, numPositionX, numPositionY, imgNum[i].dw, imgNum[i].dh);
+}
+
+function imgNumDrawFinal(i, numPositionX, numPositionY){
+    ctx.drawImage(imgNum[i].img, imgNum[i].sx, imgNum[i].sy, imgNum[i].sw, imgNum[i].sh, numPositionX, numPositionY, 50, 80);
 }
 
 function getRandomInt(min, max) {
@@ -874,6 +1081,7 @@ function dropItem() {
     if(getItemStatus === 1){
         ctx.drawImage(imgCustom, 32, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
+            getItemSound.play().catch(function(e){});
             if(lives === 5)
                 score *= 1.2;
             lives++;
@@ -885,6 +1093,7 @@ function dropItem() {
     if(getItemStatus === 2){
         ctx.drawImage(imgCustom, 0, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
+            getItemSound.play().catch(function(e){});
             equipItem = 2;
             itemUse = 6;
             itemPosY = 10000;
@@ -893,6 +1102,7 @@ function dropItem() {
     if(getItemStatus === 3){
         ctx.drawImage(imgCustom, 48, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
+            getItemSound.play().catch(function(e){});
             equipItem = 3;
             itemUse = 9;
             itemPosY = 10000;
@@ -901,6 +1111,7 @@ function dropItem() {
     if(getItemStatus === 4){
         ctx.drawImage(imgCustom, 16, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
+            getItemSound.play().catch(function(e){});
             equipItem = 4;
             itemUse = 15;
             itemPosY = 10000;
@@ -909,6 +1120,7 @@ function dropItem() {
     if(getItemStatus === 5){
         ctx.drawImage(imgCustom, 80, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height && getItemStatus === 5){
+            getItemSound.play().catch(function(e){});
             dx = dx * 0.7;
             dy = dx * 0.7;
             getItemStatus = 0;
@@ -919,6 +1131,7 @@ function dropItem() {
     if(getItemStatus === 6){
         ctx.drawImage(imgCustom, 128, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
+            getItemSound.play().catch(function(e){});
             equipItem = 6;
             itemUse = 10;
             itemPosY = 10000;
@@ -927,9 +1140,11 @@ function dropItem() {
     if(getItemStatus === 7){
         ctx.drawImage(imgCustom, 144, 0, 16, 16, itemPosX, itemPosY, 30, 30);
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
+            getItemSound.play().catch(function(e){});
             itemUse = 1;
             beforeLevel = gameState;
             gameState = gameStateLevelUp;
+            gameRestartTimer = 0;
             itemPosY = 10000;
         }
     }
@@ -998,14 +1213,16 @@ function autoMode(){
 
 function gameLevelUpCheck(){
     if(gameState === 2){
+        portalSound.play().catch(function(e){});
         ctx.drawImage(imgPortal[Math.floor(time / 2 ) % 39], 0, 0, 500, 500, 0, 0, canvas.width, canvas.height);
         gameStartTimer++;
+        gameRestartTimer = 0;
         if(beforeLevel === 0){
-            if(gameStartTimer > 0 && gameStartTimer < 30)
+            if(gameStartTimer > 0 && gameStartTimer < 50)
                 ctx.drawImage(imgRound1, 0, 0, 560, 161, 80, 400, 560, 161);
-            if(gameStartTimer > 30 && gameStartTimer < 50)
+            if(gameStartTimer > 50 && gameStartTimer <= 90)
                 ctx.drawImage(imgRound1, 0, 162, 560, 161, -70, 400, 840, 242);
-            if(gameStartTimer > 50){
+            if(gameStartTimer > 90){
                 gameStartTimer = 0;
                 gameState = beforeLevel + 1;
                 if(beforeLevel === 0)
@@ -1013,39 +1230,38 @@ function gameLevelUpCheck(){
             }
         }
         if(beforeLevel === 11){
-            if(gameStartTimer > 0 && gameStartTimer < 30)
+            if(gameStartTimer > 0 && gameStartTimer < 50)
                 ctx.drawImage(imgRound2, 0, 0, 560, 161, 80, 400, 560, 161);
-            if(gameStartTimer > 30 && gameStartTimer < 50)
+            if(gameStartTimer > 50 && gameStartTimer <= 90)
                 ctx.drawImage(imgRound2, 0, 162, 560, 161, -70, 400, 840, 242);
-            if(gameStartTimer > 50){
+            if(gameStartTimer > 90){
                 gameStartTimer = 0;
                 gameState = beforeLevel + 1;
             }
         }
         if(beforeLevel === 12){
-            if(gameStartTimer > 0 && gameStartTimer < 30)
+            if(gameStartTimer > 0 && gameStartTimer < 50)
                 ctx.drawImage(imgRound3, 0, 0, 560, 161, 80, 400, 560, 161);
-            if(gameStartTimer > 30 && gameStartTimer < 50)
+            if(gameStartTimer > 50 && gameStartTimer <= 90)
                 ctx.drawImage(imgRound3, 0, 162, 560, 161, -70, 400, 840, 242);
-            if(gameStartTimer > 50){
+            if(gameStartTimer > 90){
                 gameStartTimer = 0;
                 gameState = beforeLevel + 1;
             }
         }
         if(beforeLevel === 13){
-            if(gameStartTimer > 0 && gameStartTimer < 30)
+            if(gameStartTimer > 0 && gameStartTimer < 50)
                 ctx.drawImage(imgRound4, 0, 0, 560, 161, 80, 400, 560, 161);
-            if(gameStartTimer > 30 && gameStartTimer < 50)
+            if(gameStartTimer > 50 && gameStartTimer <= 90)
                 ctx.drawImage(imgRound4, 0, 162, 560, 161, -70, 400, 840, 242);
-            if(gameStartTimer > 50){
+            if(gameStartTimer > 90){
                 gameStartTimer = 0;
                 gameState = beforeLevel + 1;
             }
         }
         if(beforeLevel === 14){
             ctx.drawImage(imgWin, 100, 0, 560, 161, 20, 400, 560, 161);
-            if(gameStartTimer > 50){
-                roundReset();
+            if(gameStartTimer > 90){
                 gameStartTimer = 0;
                 gameState = gameEnding;
             }
@@ -1061,6 +1277,7 @@ canvas.addEventListener('click',(arg)=>{
     console.log("beforeLevel = " + beforeLevel);
     console.log("gameState = " + gameState);
     mouseClicked++;
+    gameRestartTimer++;
 });
 
 
