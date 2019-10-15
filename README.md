@@ -20,14 +20,17 @@
 - 토요일 일출이면 블록 파티는 종료!
 - 과연 누가 해뜨기 전까지 블록 파티에서 최고 점수를 획득할 수 있을까?
 
+## 패치내역
+- 점수 획득 시스템 개선
+
 ## 코드 업데이트 일지
 - 소스 분석
     - [X] 변수 분석
     - [X] 함수 분석
     - [X] 작동 원리 이해
-    - [ ] ppt 제작
-     - [X] 코드분석
-     - [ ] 계획안
+    - [X] ppt 제작
+        - [X] 코드분석
+        - [X] 계획안
 - 기능 추가하기
     - [X] 패들이 끝이 화면 바깥으로 나가려고하면 더 이상 못가도록 수정
     - [X] 공, 패들, 벽돌, 배경 이미지 수정
@@ -84,7 +87,7 @@
             - http://pngimg.com/imgs/fantasy/pokeball/
     - 이미지 관련 코드 구현법
         - https://combatguri.tistory.com/entry/22-Slicing-%EC%9D%B4%EB%AF%B8%EC%A7%80-%EC%9E%90%EB%A5%B4%EA%B8%B0%ED%81%AC%EB%A1%AD
-    - brick party 이미지
+    - block party 이미지
         - https://kirokazepixel.tumblr.com/post/179351177975/background-commissioned-for-the-puzzle-game-block
     - 각종 gif 출처
         - https://www.tumblr.com/search/pixel+background+gif
