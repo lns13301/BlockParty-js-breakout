@@ -3,7 +3,7 @@ var ctx = canvas.getContext("2d");
 var ballRadius = 10;
 var x = canvas.width/2;
 var y = canvas.height-30;
-var ballSpeed = 9;
+var ballSpeed = 7;
 var lifeInterval = 15;
 var dx = ballSpeed;
 var dy = -ballSpeed;
@@ -149,9 +149,6 @@ var imgCustom = new Image();
 imgCustom.src = "img/breakout_custom.png";
 imgPieces.addEventListener("load", summonItem,false);
 
-var imgBallPokeball = new Image();
-imgBallPokeball.src = "img/pokeball.png";
-
 var imgPlayButton = new Image();
 imgPlayButton.src = "img/playButton.png";
 
@@ -230,8 +227,18 @@ function makeBricks(){
     dy = 9;
     x = canvas.width/2;
     y = canvas.height-30;
-    if(score > 10)
-        score += 200;
+    if(score > 10){
+        if(lives === 1)
+            score = Math.floor(score * 1.1);
+        if(lives === 2)
+            score = Math.floor(score * 1.15);
+        if(lives === 3)
+            score = Math.floor(score * 1.18);
+        if(lives === 4)
+            score = Math.floor(score * 1.20);
+        if(lives === 5)
+            score = Math.floor(score * 1.20);
+    }
     // 초기화 구문
 }
 
@@ -309,6 +316,7 @@ function collisionDetection() {
                     dy = -dy;
                     brickHitSounds[brickHitSounds[6]++ % 6].play().catch(function(e){});
                     b.status--;
+                    score += b.status;
                     breakBrick++;
                     if(b.status > 0)
                         b.itemBrick = 2;
@@ -377,16 +385,18 @@ function collisionDetection() {
                     }
                     b.itembrick = 0;
                     score++;
-                    if(dx > 13 || dy > 13 || dx < -13 || dy < -13)
+                    if(dx > 11 || dy > 11 || dx < -11 || dy < -11)
+                        score++;
+                    if(dx > 15 || dy > 15 || dx < -15 || dy < -15)
                         score++;
                     if(dx > 18 || dy > 18 || dx < -18 || dy < -18)
                         score++;
-                    if(dx > 22 || dy > 22 || dx < -22 || dy < -22)
+                    if(dx > 20 || dy > 20 || dx < -20 || dy < -20)
                         score++;
                     if(dx > 25 || dy > 25 || dx < -25 || dy < -25)
-                        score++;
-                    if(dx > 29 || dy > 29 || dx < -29 || dy < -29)
                         score += 3;
+                    if(dx >= 28 || dy >= 28 || dx <= -28 || dy <= -28)
+                        score += 5;
                 }
             }
         }
@@ -1052,22 +1062,22 @@ function draw() {
         ctx.textBaseline = "top";
         ctx.fillText("Left Click to shot ball", canvas.width * 0.25, canvas.height * 0.8);
     }
-    if(dx > 0 && dx < 5)
-        dx = 5;
-    if(dx > -5 && dx < 0)
+    if(dx > 0 && dx < 4)
+        dx = 4;
+    if(dx > -4 && dx < 0)
         dx = -5;
-    if(dy > 0 && dy < 5)
-        dy = 5;
-    if(dy > -5 && dy < 0)
-        dy = -5;
+    if(dy > 0 && dy < 4)
+        dy = 4;
+    if(dy > -4 && dy < 0)
+        dy = -4;
     if(dx > 30)
-        dx = 30;
-    if(dx < -30)
-        dx = -30;
-    if(dy > 30)
-        dy = 30;
-    if(dy < -30)
-        dy = -30;
+        dx = 28;
+    if(dx < -28)
+        dx = -28;
+    if(dy > 28)
+        dy = 28;
+    if(dy < -28)
+        dy = -28;
     // 공속도가 비정상적으로 느려지거나 빨라지면 일정속도로 설정
     requestAnimationFrame(draw); // 고정 프레임 속도보다 게임을 더 잘 렌더링 할 수 있도록 설정
 }
@@ -1122,8 +1132,9 @@ function dropItem() {
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
             getItemSound.play().catch(function(e){});
             if(lives === 5)
-                score *= 1.2;
+                score = Math.floor(score * 1.2);
             lives++;
+            score += 30;
             getItemStatus = 0;
             itemUse = 0;
             itemPosY = 10000;
@@ -1136,6 +1147,8 @@ function dropItem() {
             equipItem = 2;
             itemUse = 6;
             itemPosY = 10000;
+            score += 10;
+            getItemStatus = 0;
         }
     }
     if(getItemStatus === 3){
@@ -1143,8 +1156,10 @@ function dropItem() {
         if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height){
             getItemSound.play().catch(function(e){});
             equipItem = 3;
-            itemUse = 9;
+            itemUse = 10;
             itemPosY = 10000;
+            score += 15;
+            getItemStatus = 0;
         }
     }
     if(getItemStatus === 4){
@@ -1154,6 +1169,8 @@ function dropItem() {
             equipItem = 4;
             itemUse = 15;
             itemPosY = 10000;
+            score += 20;
+            getItemStatus = 0;
         }
     }
     if(getItemStatus === 5){
@@ -1162,6 +1179,7 @@ function dropItem() {
             getItemSound.play().catch(function(e){});
             dx = dx * 0.7;
             dy = dx * 0.7;
+            score = Math.floor(score * 1.05);
             getItemStatus = 0;
             itemUse = 0;
             itemPosY = 10000;
@@ -1174,6 +1192,8 @@ function dropItem() {
             equipItem = 6;
             itemUse = 10;
             itemPosY = 10000;
+            score += 50;
+            getItemStatus = 0;
         }
     }
     if(getItemStatus === 7){
@@ -1185,6 +1205,8 @@ function dropItem() {
             gameState = gameStateLevelUp;
             gameRestartTimer = 0;
             itemPosY = 10000;
+            score += 100;
+            getItemStatus = 0;
         }
     }
     if(itemPosY > canvas.height){
