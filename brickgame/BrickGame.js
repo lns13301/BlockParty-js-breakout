@@ -58,6 +58,14 @@ var particleNum = 0;
 var gameRestartTimer = 0;
 var endTime = 0;
 var bellCount = 0;
+var soundOff = false;
+var getScore = 0;
+var comboCount = 0;
+var frame = 0;
+var sec = 0;
+var min = 0;
+var rankingStatus= 0;
+var rankingList = [];
 
 var gameState = gameStateHome;
 
@@ -171,9 +179,17 @@ var imgWin = new Image();
 imgWin.src = "img/win.png";
 
 
+var mainMusic = new Audio("sounds/Megalovania A-Guitar rmx.mp3");
+mainMusic.controls = true;
+mainMusic.loop = true;
+
 var backgroundMusic = new Audio("sounds/Sakuria.mp3");
 backgroundMusic.controls = true;
 backgroundMusic.loop = true;
+
+var endingMusic = new Audio("sounds/EK-07 - Now.mp3");
+endingMusic.controls = true;
+endingMusic.loop = true;
 
 var rainSound = new Audio("sounds/rain1.ogg");
 rainSound.controls = true;
@@ -257,7 +273,7 @@ function keyDownHandler(e) {
     }
     else if(e.key === "a"|| e.key === "A") {
         if(aPressed) aPressed = false;
-        else aPressed = true;
+            else aPressed = true;
     }
     else if(e.key === "n"|| e.key === "N") {
         beforeLevel = gameState;
@@ -269,6 +285,10 @@ function keyDownHandler(e) {
     }
     else if(e.key === "r" || e.key === "R") {
         rPressed = true;
+    }
+    else if(e.key === "s"|| e.key === "S") {
+        if(!soundOff) soundOff = true;
+            else soundOff = false;
     }
 }
 
@@ -316,7 +336,9 @@ function collisionDetection() {
                     dy = -dy;
                     brickHitSounds[brickHitSounds[6]++ % 6].play().catch(function(e){});
                     b.status--;
-                    score += b.status;
+                    if(b.status < 20){
+                        getScore += b.status;
+                    }
                     breakBrick++;
                     if(b.status > 0)
                         b.itemBrick = 2;
@@ -342,21 +364,21 @@ function collisionDetection() {
                         if(equipItem === 2 && itemUse > 0){
                             for(var lineX = minBallLocationX; lineX < maxBallLocationX; lineX++){
                                 bricks[c][lineX].status--;
-                                score++;
+                                getScore++;
                             }
                             for(var lineY = minBallLocationY; lineY < maxBallLocationY; lineY++){
                                 bricks[lineY][r].status--;
-                                score++;
+                                getScore++;
                             }
                             for(var lineX = minBallLocation2X; lineX < minBallLocation2X; lineX++){
                                 bricks[maxBallLocationY - 1][lineX].status--;
-                                score++;
+                                getScore++;
                             }
                             if(minBallLocationY <= maxBallLocationY){
                                 for(var lineX = minBallLocation2X; lineX < maxBallLocation2X; lineX++){
                                     if(minBallLocation2X > 1){
                                         bricks[minBallLocationY + 1][lineX].status--;
-                                        score++;
+                                        getScore++;
                                     }
                                 }
                             }
@@ -384,19 +406,9 @@ function collisionDetection() {
                         itemUse--;
                     }
                     b.itembrick = 0;
-                    score++;
-                    if(dx > 11 || dy > 11 || dx < -11 || dy < -11)
-                        score++;
-                    if(dx > 15 || dy > 15 || dx < -15 || dy < -15)
-                        score++;
-                    if(dx > 18 || dy > 18 || dx < -18 || dy < -18)
-                        score++;
-                    if(dx > 20 || dy > 20 || dx < -20 || dy < -20)
-                        score++;
-                    if(dx > 25 || dy > 25 || dx < -25 || dy < -25)
-                        score += 3;
-                    if(dx >= 28 || dy >= 28 || dx <= -28 || dy <= -28)
-                        score += 5;
+                    getScore++;
+                    comboCount++;
+                    calcScore();
                 }
             }
         }
@@ -416,11 +428,11 @@ function drawPaddle() {
 } // 튕겨져나온 공을 받아칠 패들을 생성
 
 function musicOn(){
-    if(gameState > 10)
+    if(gameState > 10 && !soundOff)
         backgroundMusic.play().catch(function(e){});
-    if(gameState < 13 && gameState > 10)
+    if(gameState < 13 && gameState > 10 && !soundOff)
         rainSound.play().catch(function (e){});
-    if(gameState > 12 || gameState < 11)
+    if(gameState > 12 || gameState < 11 && !soundOff)
         rainSound.pause();
 }
 
@@ -433,6 +445,7 @@ function drawBackground1() {
     ctx.beginPath();
     ctx.drawImage(imgGameMain[Math.floor(time / 3 ) % 20], 0, 0, canvas.width, canvas.height);
     ctx.drawImage(imgPlayButton, 0, 0, 600, 200, canvas.width / 2 - 170, canvas.height * 0.7, 350, 150);
+    mainMusic.play().catch(function(e){});
     if(cursorX > 200 && cursorX < 500 && cursorY > 650 && cursorY < 780){
         drawWaterDrop();
         if(mouseClicked === 1){
@@ -469,6 +482,9 @@ function drawBackground5() {
 
 function drawBackground6() {
     ctx.beginPath();
+    backgroundMusic.pause();
+    rainSound.pause();
+    mainMusic.pause();
     ctx.drawImage(imgGameEnding[Math.floor(time / 3) % 31], 0, 0, canvas.width, canvas.height);
     ctx.fillStyle = "rgb(255,249,248)";
     ctx.font = '90px Fantasy';
@@ -510,14 +526,14 @@ function drawBackground6() {
         ctx.fillStyle = "rgb(255,249,248)";
         ctx.font = '90px Fantasy';
         ctx.textBaseline = "top";
-        ctx.fillText(" " + Math.floor(score % 10), canvas.width * 0.7, canvas.height * 0.5);
+        ctx.fillText(" " + Math.floor(score % 10), canvas.width * 0.7, canvas.height * 0.35);
     }
     if(time > endTime + 100){
         if(score >= 10){
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
             ctx.textBaseline = "top";
-            ctx.fillText(" " + Math.floor(score / 10 % 10), canvas.width * 0.6, canvas.height * 0.5);
+            ctx.fillText(" " + Math.floor(score / 10 % 10), canvas.width * 0.6, canvas.height * 0.35);
         }
     }
     if(time > endTime + 150){
@@ -525,7 +541,7 @@ function drawBackground6() {
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
             ctx.textBaseline = "top";
-            ctx.fillText(" " + Math.floor(score / 100 % 10), canvas.width * 0.5, canvas.height * 0.5);
+            ctx.fillText(" " + Math.floor(score / 100 % 10), canvas.width * 0.5, canvas.height * 0.35);
         }
     }
     if(time > endTime + 200){
@@ -533,7 +549,7 @@ function drawBackground6() {
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
             ctx.textBaseline = "top";
-            ctx.fillText(" " + Math.floor(score / 1000 % 10), canvas.width * 0.4, canvas.height * 0.5);
+            ctx.fillText(" " + Math.floor(score / 1000 % 10), canvas.width * 0.4, canvas.height * 0.35);
         }
     }
     if(time > endTime + 250){
@@ -541,7 +557,7 @@ function drawBackground6() {
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
             ctx.textBaseline = "top";
-            ctx.fillText(" " + Math.floor(score / 10000 % 10), canvas.width * 0.3, canvas.height * 0.5);
+            ctx.fillText(" " + Math.floor(score / 10000 % 10), canvas.width * 0.3, canvas.height * 0.35);
         }
     }
     if(time > endTime + 300){
@@ -549,16 +565,19 @@ function drawBackground6() {
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
             ctx.textBaseline = "top";
-            ctx.fillText(" " + score / Math.floor(100000 % 10), canvas.width * 0.2, canvas.height * 0.5);
+            ctx.fillText(" " + Math.floor(score / 100000 % 10), canvas.width * 0.2, canvas.height * 0.35);
         }
     }
-    if(time > endTime + 350) {
+    if(time > endTime + 350){
         if (score >= 1000000) {
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
             ctx.textBaseline = "top";
-            ctx.fillText(" " + score / Math.floor(1000000 % 10), canvas.width * 0.1, canvas.height * 0.5);
+            ctx.fillText(" " + Math.floor(score / 1000000 % 10), canvas.width * 0.1, canvas.height * 0.35);
         }
+    }
+    if(time > endTime + 380){
+        viewRanking();
     }
     ctx.closePath();
 }
@@ -773,6 +792,8 @@ function draw() {
     if(gameState === gameStateHome){
         drawBackground1();
     }
+    if(gameState !== gameStateHome)
+        mainMusic.pause();
     if(gameState > 10){
         if(gameState === gameStateRound1){
             drawBackground2();
@@ -902,6 +923,9 @@ function draw() {
                 bricks[1][0] = {x: 0, y: 0, status: 200, itemBrick: 100};
                 bricks[1][11] = {x: 0, y: 0, status: 200, itemBrick: 100};
                 initRound = 4;
+
+                if(itemPosX > paddleX && itemPosX < paddleX + paddleWidth && itemPosY > canvas.height - 36 && itemPosY < canvas.height)
+                    score = Math.floor(score * 1.2);
             }
         }
         drawBricks();
@@ -924,17 +948,19 @@ function draw() {
         animationHandler2();
         animationHandler3();
         musicOn();
+
+        showScoreBonus();
         // 앞서 생성한 함수들을 호출
         if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
             collisionSounds[collisionSounds[6]++ % 6].play().catch(function(e){});
             dx = -dx;
-            dy *= 1.05;
+            dy *= 1.1;
             // 튕긴 후 속도
         }
         if(y + dy < ballRadius) {
             collisionSounds[collisionSounds[6]++ % 6].play().catch(function(e){});
             dy = -dy;
-            dx *= 1.2;
+            dx *= 1.25;
             // 튕긴 후 속도
         }
         // 공이 벽을 닿으면 반대방향으로 이동하도록 좌표를 수정
@@ -943,57 +969,59 @@ function draw() {
                 collisionSounds[collisionSounds[6]++ % 6].play().catch(function(e){});
                 if(paddleWidth / (x - paddleX) >= 20){
                     dx = -ballSpeed;
-                    dx = dx * 1.5;
-                    dy = dy / 1.45;
+                    dx = dx * 2.0;
+                    dy = dy / 1.3;
                 }
                 if(paddleWidth / (x - paddleX) < 20 && paddleWidth / (x - paddleX) >= 6.66){
                     dx = -ballSpeed;
-                    dx = dx * 1.3;
-                    dy = dy / 1.25;
+                    dx = dx * 1.6;
+                    dy = dy / 1.2;
                 }
                 if(paddleWidth / (x - paddleX) < 6.66 && paddleWidth / (x - paddleX) >= 3.33){
                     dx = -ballSpeed;
-                    dx = dx * 1.15;
-                    dy = dy / 1.13;
+                    dx = dx * 1.35;
+                    dy = dy / 1.1;
                 }
-                if(paddleWidth / (x - paddleX) < 3.33 && paddleWidth / (x - paddleX) >= 2.5){
+                if(paddleWidth / (x - paddleX) < 3.33 && paddleWidth / (x - paddleX) >= 2.7){
                     dx = -ballSpeed;
-                    dx = dx * 1.08;
-                    dy = dy / 1.08;
+                    dx = dx * 1.15;
+                    dy = dy / 1.05;
                 }
                 if(paddleWidth / (x - paddleX) < 2.7  && paddleWidth / (x - paddleX) >= 1.62){
-                    dx = 1.03;
-                    dy = dy * 1.1;
+                    dx = 0.93;
+                    dy = dy / 0.96;
                 }
-                if(paddleWidth / (x - paddleX) < 1.55  && paddleWidth / (x - paddleX) >= 1.42){
+                if(paddleWidth / (x - paddleX) < 1.62  && paddleWidth / (x - paddleX) >= 1.42){
                     dx = ballSpeed;
-                    dx = dx * 1.08;
-                    dy = dy / 1.08;
+                    dx = dx * 1.15;
+                    dy = dy / 1.05;
                 }
                 if(paddleWidth / (x - paddleX) < 1.42  && paddleWidth / (x - paddleX) >= 1.17){
                     dx = ballSpeed;
-                    dx = dx * 1.15;
-                    dy = dy / 1.13;
+                    dx = dx * 1.35;
+                    dy = dy / 1.1;
                 }
                 if(paddleWidth / (x - paddleX) < 1.17  && paddleWidth / (x - paddleX) >= 1.05){
                     dx = ballSpeed;
-                    dx = dx * 1.3;
-                    dy = dy / 1.25;
+                    dx = dx * 1.6;
+                    dy = dy / 1.2;
                 }
                 if(paddleWidth / (x - paddleX) < 1.05 && paddleWidth / (x - paddleX) >= 1){
                     dx = ballSpeed;
-                    dx = dx * 1.5;
-                    dy = dy / 1.45;
+                    dx = dx * 2.0;
+                    dy = dy / 1.3;
                 }
                 dy = -dy;
                 combo = 0;
             }
             else {
                 lives--;
+                comboCount = 0;
                 gameRestartTimer = 0;
                 if(!lives) {
                     thunderSound.play().catch(function(e){});
-                    rPressed = true;
+                    gameState = 2;
+                    beforeLevel = -1;
                 }
                 else {
                     x = canvas.width / 2;
@@ -1034,9 +1062,16 @@ function draw() {
         gameState = gameStateHome;
         backgroundMusic.pause();
         rainSound.pause();
-        endTime = -100;
+        endingMusic.pause();
+        endTime = -5;
         rPressed = false;
     }
+
+    if(soundOff) {
+        backgroundMusic.pause();
+        rainSound.pause();
+    }
+
     if(endTime < 0)
         endTime++;
     if(endTime === -1)
@@ -1049,7 +1084,11 @@ function draw() {
     }
     if(mouseClicked > 0)
         mouseClicked = 0;
+
     time++;
+    if(gameState !== gameStateHome && gameState !== gameEnding)
+        timer();
+
     if(gameRestartTimer === 0 && gameState > 10){
         itemUse = 0;
         equipItem = 0;
@@ -1070,14 +1109,14 @@ function draw() {
         dy = 4;
     if(dy > -4 && dy < 0)
         dy = -4;
-    if(dx > 30)
-        dx = 28;
-    if(dx < -28)
-        dx = -28;
-    if(dy > 28)
-        dy = 28;
-    if(dy < -28)
-        dy = -28;
+    if(dx > 31)
+        dx = 30;
+    if(dx < -31)
+        dx = -30;
+    if(dy > 31)
+        dy = 30;
+    if(dy < -31)
+        dy = -30;
     // 공속도가 비정상적으로 느려지거나 빨라지면 일정속도로 설정
     requestAnimationFrame(draw); // 고정 프레임 속도보다 게임을 더 잘 렌더링 할 수 있도록 설정
 }
@@ -1205,7 +1244,8 @@ function dropItem() {
             gameState = gameStateLevelUp;
             gameRestartTimer = 0;
             itemPosY = 10000;
-            score += 100;
+            score += 250;
+            comboCount = 0;
             getItemStatus = 0;
         }
     }
@@ -1321,14 +1361,159 @@ function gameLevelUpCheck(){
             }
         }
         if(beforeLevel === 14){
-            ctx.drawImage(imgWin, 100, 0, 560, 161, 20, 400, 560, 161);
+            ctx.fillStyle = "rgb(255,157,9)";
+            ctx.font = '130px Fantasy';
+            ctx.textBaseline = "top";
+            ctx.fillText("You Win", canvas.width * 0.2, canvas.height * 0.4);
+            if(gameStartTimer === 90){
+                score = Math.floor(score * 1.5);
+                gameStartTimer = 0;
+                gameState = gameEnding;
+            }
+            endingMusic.play().catch(function(e){});
+        }
+        if(beforeLevel === -1){
+            ctx.fillStyle = "rgb(255,157,9)";
+            ctx.font = '130px Fantasy';
+            ctx.textBaseline = "top";
+            ctx.fillText("You Lose", canvas.width * 0.18, canvas.height * 0.4);
+            backgroundMusic.pause();
+            rainSound.pause();
             if(gameStartTimer > 90){
                 gameStartTimer = 0;
                 gameState = gameEnding;
             }
+            endingMusic.play().catch(function(e){});
         }
     }
 }
+
+function showScoreBonus(){
+    ctx.fillStyle = "rgba(255,249,248,0.48)";
+    ctx.font = '80px Fantasy';
+    ctx.textBaseline = "top";
+    if(dx >= 30 || dy >= 30 || dx <= -30 || dy <= -30){
+        ctx.fillText("Score X 7", canvas.width * 0.28, canvas.height * 0.5);
+    }
+    else if(dx > 25 || dy > 25 || dx < -25 || dy < -25){
+        ctx.fillText("Score X 6", canvas.width * 0.28, canvas.height * 0.5);
+    }
+    else if(dx > 22 || dy > 22 || dx < -22 || dy < -22){
+        ctx.fillText("Score X 5", canvas.width * 0.28, canvas.height * 0.5);
+    }
+    else if(dx > 19 || dy > 19 || dx < -19 || dy < -19){
+        ctx.fillText("Score X 4", canvas.width * 0.28, canvas.height * 0.5);
+    }
+    else if(dx > 16 || dy > 16 || dx < -16 || dy < -16){
+        ctx.fillText("Score X 3", canvas.width * 0.28, canvas.height * 0.5);
+    }
+    else if(dx > 12 || dy > 12 || dx < -12 || dy < -12){
+        ctx.fillText("Score X 2", canvas.width * 0.28, canvas.height * 0.5);
+    }
+}
+
+function calcScore(){
+    if(getScore > 0) {
+        getScore += Math.floor(getScore + comboCount / 10);
+        if (dx >= 30 || dy >= 30 || dx <= -30 || dy <= -30) {
+            score += getScore * 7;
+        }
+        if ((dx > 25 || dy > 25 || dx < -25 || dy < -25) && (dx < 30 || dy < 30 || dx > -30 || dy > -30)) {
+            score += getScore * 6;
+        }
+        if ((dx > 22 || dy > 22 || dx < -22 || dy < -22) && (dx < 25 || dy < 25 || dx > -25 || dy > -25)) {
+            score += getScore * 5;
+        }
+        if ((dx > 19 || dy > 19 || dx < -19 || dy < -19) && (dx < 19 || dy < 19 || dx > -19 || dy > -19)) {
+            score += getScore * 4;
+        }
+        if ((dx > 16 || dy > 16 || dx < -16 || dy < -16) && (dx < 16 || dy < 16 || dx > -16 || dy > -16)) {
+            score += getScore * 3;
+        }
+        if ((dx > 12 || dy > 12 || dx < -12 || dy < -12) && (dx < 12 || dy < 12 || dx > -12 || dy > -12)) {
+            score += getScore * 2;
+        }
+        if (dx < 12 || dy < 12 || dx > -12 || dy > -12) {
+            score += getScore;
+        }
+    }
+    getScore = 0;
+}
+
+function timer(){
+    if(gameRestartTimer !== 0)
+        frame++;
+    ctx.fillStyle = "rgba(255,242,206,0.5)";
+    ctx.font = '40px Fantasy';
+    ctx.textBaseline = "top";
+    if(min > 9 && sec > 9)
+        ctx.fillText(min + ":" + sec, canvas.width * 0.85, canvas.height * 0.95);
+    if(min < 10 && sec > 9)
+        ctx.fillText("0" + min + ":" + sec, canvas.width * 0.85, canvas.height * 0.95);
+    if(min > 9 && sec < 10)
+        ctx.fillText(min + ":0" + sec, canvas.width * 0.85, canvas.height * 0.95);
+    if(min < 10 && sec < 10)
+        ctx.fillText("0" + min + ":0" + sec, canvas.width * 0.85, canvas.height * 0.95);
+    if(frame > 59){
+        frame = 0;
+        sec ++;
+    }
+    if(sec > 59){
+        sec = 0;
+        min ++;
+    }
+}
+
+function viewRanking(){
+    if(rankingStatus === 0){
+        for(var i = 1; i < 6; i++){
+            if(localStorage.getItem('rankingScore' + i) === undefined)
+                localStorage.setItem('rankingScore' + i, '0');
+            rankingList.push(Number(localStorage.getItem('rankingScore' + i)))
+        }
+
+        rankingList.push(score);
+        rankingList.sort((a,b)=>{
+            if(Number(a) > Number(b))
+                return 1;
+            else return -1;
+        });
+        rankingStatus = 1;
+    }
+
+    ctx.fillStyle = "rgba(255,185,96,0.81)";
+    ctx.font = '50px Fantasy';
+    ctx.textBaseline = "top";
+    ctx.fillText("Rank 1st.     " + rankingList[5], canvas.width * 0.3, canvas.height * 0.50);
+    ctx.fillText("Rank 2nd.   " + rankingList[4], canvas.width * 0.3, canvas.height * 0.55);
+    ctx.fillText("Rank 3rd.    " + rankingList[3], canvas.width * 0.3, canvas.height * 0.60);
+    ctx.fillText("Rank 4st.    " + rankingList[2], canvas.width * 0.3, canvas.height * 0.65);
+    ctx.fillText("Rank 5st.    " + rankingList[1], canvas.width * 0.3, canvas.height * 0.70);
+
+    for(var i = 1; i < 6; i++)
+        localStorage.setItem('rankingScore' + i, rankingList[i]);
+
+    ctx.fillStyle = "rgba(255,185,96,0.81)";
+    ctx.font = '50px Fantasy';
+    ctx.textBaseline = "top";
+
+    if(time / 18 % 3 === 0 || time / 27 % 3 === 1)
+        ctx.fillStyle = "rgba(255,69,74,0.81)";
+    if(time / 18 % 3 === 2)
+        ctx.fillStyle = "rgba(255,215,24,0.81)";
+
+    if(rankingList[1] === score)
+        ctx.fillText("NEW!!", canvas.width * 0.05, canvas.height * 0.70);
+    if(rankingList[2] === score)
+        ctx.fillText("NEW!!", canvas.width * 0.05, canvas.height * 0.65);
+    if(rankingList[3] === score)
+        ctx.fillText("NEW!!", canvas.width * 0.05, canvas.height * 0.60);
+    if(rankingList[4] === score)
+        ctx.fillText("NEW!!", canvas.width * 0.05, canvas.height * 0.55);
+    if(rankingList[5] === score)
+        ctx.fillText("NEW!!", canvas.width * 0.05, canvas.height * 0.50);
+}
+
 document.onmousemove = function(e){
     cursorX = e.pageX;
     cursorY = e.pageY;
