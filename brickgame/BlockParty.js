@@ -3,7 +3,8 @@ var ctx = canvas.getContext("2d");
 var ballRadius = 10;
 var x = canvas.width/2;
 var y = canvas.height-30;
-var ballSpeed = 7;
+var ballSpeed = 3;
+var ballShotPower = 5;
 var lifeInterval = 15;
 var dx = ballSpeed;
 var dy = -ballSpeed;
@@ -239,8 +240,8 @@ function makeBricks(){
     equipItem = 0;
     itemUse = 0;
     getItemStatus = 0;
-    dx = 9;
-    dy = 9;
+    dx = ballShotPower;
+    dy = ballShotPower;
     x = canvas.width/2;
     y = canvas.height-30;
     if(score > 10){
@@ -522,13 +523,13 @@ function drawBackground6() {
         }
         bellCount++;
     }
-    if(time > endTime + 50){
+    if(time > endTime + 100){
         ctx.fillStyle = "rgb(255,249,248)";
         ctx.font = '90px Fantasy';
         ctx.textBaseline = "top";
         ctx.fillText(" " + Math.floor(score % 10), canvas.width * 0.7, canvas.height * 0.35);
     }
-    if(time > endTime + 100){
+    if(time > endTime + 200){
         if(score >= 10){
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
@@ -536,7 +537,7 @@ function drawBackground6() {
             ctx.fillText(" " + Math.floor(score / 10 % 10), canvas.width * 0.6, canvas.height * 0.35);
         }
     }
-    if(time > endTime + 150){
+    if(time > endTime + 300){
         if(score >= 100){
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
@@ -544,7 +545,7 @@ function drawBackground6() {
             ctx.fillText(" " + Math.floor(score / 100 % 10), canvas.width * 0.5, canvas.height * 0.35);
         }
     }
-    if(time > endTime + 200){
+    if(time > endTime + 400){
         if(score >= 1000){
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
@@ -552,7 +553,7 @@ function drawBackground6() {
             ctx.fillText(" " + Math.floor(score / 1000 % 10), canvas.width * 0.4, canvas.height * 0.35);
         }
     }
-    if(time > endTime + 250){
+    if(time > endTime + 500){
         if(score >= 10000){
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
@@ -560,7 +561,7 @@ function drawBackground6() {
             ctx.fillText(" " + Math.floor(score / 10000 % 10), canvas.width * 0.3, canvas.height * 0.35);
         }
     }
-    if(time > endTime + 300){
+    if(time > endTime + 600){
         if(score >= 100000){
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
@@ -568,7 +569,7 @@ function drawBackground6() {
             ctx.fillText(" " + Math.floor(score / 100000 % 10), canvas.width * 0.2, canvas.height * 0.35);
         }
     }
-    if(time > endTime + 350){
+    if(time > endTime + 700){
         if (score >= 1000000) {
             ctx.fillStyle = "rgb(255,249,248)";
             ctx.font = '90px Fantasy';
@@ -576,7 +577,7 @@ function drawBackground6() {
             ctx.fillText(" " + Math.floor(score / 1000000 % 10), canvas.width * 0.1, canvas.height * 0.35);
         }
     }
-    if(time > endTime + 380){
+    if(time > endTime + 760){
         viewRanking();
     }
     ctx.closePath();
@@ -954,13 +955,13 @@ function draw() {
         if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
             collisionSounds[collisionSounds[6]++ % 6].play().catch(function(e){});
             dx = -dx;
-            dy *= 1.1;
+            dy *= 1.05;
             // 튕긴 후 속도
         }
         if(y + dy < ballRadius) {
             collisionSounds[collisionSounds[6]++ % 6].play().catch(function(e){});
             dy = -dy;
-            dx *= 1.25;
+            dx *= 1.15;
             // 튕긴 후 속도
         }
         // 공이 벽을 닿으면 반대방향으로 이동하도록 좌표를 수정
@@ -969,47 +970,47 @@ function draw() {
                 collisionSounds[collisionSounds[6]++ % 6].play().catch(function(e){});
                 if(paddleWidth / (x - paddleX) >= 20){
                     dx = -ballSpeed;
-                    dx = dx * 2.0;
-                    dy = dy / 1.3;
+                    dx = dx * 1.5;
+                    dy = dy / 1.15;
                 }
                 if(paddleWidth / (x - paddleX) < 20 && paddleWidth / (x - paddleX) >= 6.66){
                     dx = -ballSpeed;
-                    dx = dx * 1.6;
-                    dy = dy / 1.2;
+                    dx = dx * 1.3;
+                    dy = dy / 1.1;
                 }
                 if(paddleWidth / (x - paddleX) < 6.66 && paddleWidth / (x - paddleX) >= 3.33){
                     dx = -ballSpeed;
-                    dx = dx * 1.35;
-                    dy = dy / 1.1;
+                    dx = dx * 1.17;
+                    dy = dy / 1.05;
                 }
                 if(paddleWidth / (x - paddleX) < 3.33 && paddleWidth / (x - paddleX) >= 2.7){
                     dx = -ballSpeed;
-                    dx = dx * 1.15;
-                    dy = dy / 1.05;
+                    dx = dx * 1.07;
+                    dy = dy / 1.02;
                 }
                 if(paddleWidth / (x - paddleX) < 2.7  && paddleWidth / (x - paddleX) >= 1.62){
-                    dx = 0.93;
-                    dy = dy / 0.96;
+                    dx = 0.96;
+                    dy = dy / 0.98;
                 }
                 if(paddleWidth / (x - paddleX) < 1.62  && paddleWidth / (x - paddleX) >= 1.42){
                     dx = ballSpeed;
-                    dx = dx * 1.15;
-                    dy = dy / 1.05;
+                    dx = dx * 1.07;
+                    dy = dy / 1.02;
                 }
                 if(paddleWidth / (x - paddleX) < 1.42  && paddleWidth / (x - paddleX) >= 1.17){
                     dx = ballSpeed;
-                    dx = dx * 1.35;
-                    dy = dy / 1.1;
+                    dx = dx * 1.17;
+                    dy = dy / 1.05;
                 }
                 if(paddleWidth / (x - paddleX) < 1.17  && paddleWidth / (x - paddleX) >= 1.05){
                     dx = ballSpeed;
-                    dx = dx * 1.6;
-                    dy = dy / 1.2;
+                    dx = dx * 1.3;
+                    dy = dy / 1.1;
                 }
                 if(paddleWidth / (x - paddleX) < 1.05 && paddleWidth / (x - paddleX) >= 1){
                     dx = ballSpeed;
-                    dx = dx * 2.0;
-                    dy = dy / 1.3;
+                    dx = dx * 1.5;
+                    dy = dy / 1.15;
                 }
                 dy = -dy;
                 combo = 0;
@@ -1105,19 +1106,19 @@ function draw() {
     if(dx > 0 && dx < 4)
         dx = 4;
     if(dx > -4 && dx < 0)
-        dx = -5;
+        dx = -4;
     if(dy > 0 && dy < 4)
         dy = 4;
     if(dy > -4 && dy < 0)
         dy = -4;
-    if(dx > 25)
-        dx = 24;
-    if(dx < -25)
-        dx = -24;
-    if(dy > 25)
-        dy = 24;
-    if(dy < -25)
-        dy = -24;
+    if(dx > 18)
+        dx = 18;
+    if(dx < -18)
+        dx = -18;
+    if(dy > 18)
+        dy = 18;
+    if(dy < -18)
+        dy = -18;
     // 공속도가 비정상적으로 느려지거나 빨라지면 일정속도로 설정
     requestAnimationFrame(draw); // 고정 프레임 속도보다 게임을 더 잘 렌더링 할 수 있도록 설정
 }
@@ -1393,22 +1394,22 @@ function showScoreBonus(){
     ctx.fillStyle = "rgba(255,249,248,0.48)";
     ctx.font = '80px Fantasy';
     ctx.textBaseline = "top";
-    if(dx >= 30 || dy >= 30 || dx <= -30 || dy <= -30){
+    if(dx >= 16 || dy >= 16 || dx <= -16 || dy <= -16){
         ctx.fillText("Score X 7", canvas.width * 0.28, canvas.height * 0.5);
     }
-    else if(dx > 25 || dy > 25 || dx < -25 || dy < -25){
+    else if(dx > 14 || dy > 14 || dx < -14 || dy < -14){
         ctx.fillText("Score X 6", canvas.width * 0.28, canvas.height * 0.5);
     }
-    else if(dx > 22 || dy > 22 || dx < -22 || dy < -22){
+    else if(dx > 12 || dy > 12 || dx < -12 || dy < -12){
         ctx.fillText("Score X 5", canvas.width * 0.28, canvas.height * 0.5);
     }
-    else if(dx > 19 || dy > 19 || dx < -19 || dy < -19){
+    else if(dx > 10 || dy > 10 || dx < -10 || dy < -10){
         ctx.fillText("Score X 4", canvas.width * 0.28, canvas.height * 0.5);
     }
-    else if(dx > 16 || dy > 16 || dx < -16 || dy < -16){
+    else if(dx > 8 || dy > 8 || dx < -8 || dy < -8){
         ctx.fillText("Score X 3", canvas.width * 0.28, canvas.height * 0.5);
     }
-    else if(dx > 12 || dy > 12 || dx < -12 || dy < -12){
+    else if(dx > 6 || dy > 6 || dx < -6 || dy < -6){
         ctx.fillText("Score X 2", canvas.width * 0.28, canvas.height * 0.5);
     }
 }
@@ -1416,21 +1417,27 @@ function showScoreBonus(){
 function calcScore(){
     if(getScore > 0) {
         getScore += Math.floor(getScore + comboCount / 10);
-        if ((dx > 22 || dy > 22 || dx < -22 || dy < -22) && (dx < 25 || dy < 25 || dx > -25 || dy > -25)) {
+		if ((dx > 16 || dy > 16 || dx < -16 || dy < -16) && (dx < 16 || dy < 16 || dx > -16 || dy > -16)) {
+            score += getScore * 7;
+        }
+        else if ((dx > 14 || dy > 14 || dx < -14 || dy < -14) && (dx < 14 || dy < 14 || dx > -14 || dy > -14)) {
+            score += getScore * 6;
+        }
+        else if ((dx > 12 || dy > 12 || dx < -12 || dy < -12) && (dx < 12 || dy < 12 || dx > -12 || dy > -12)) {
             score += getScore * 5;
         }
-        if ((dx > 19 || dy > 19 || dx < -19 || dy < -19) && (dx < 19 || dy < 19 || dx > -19 || dy > -19)) {
+        else if ((dx > 10 || dy > 10 || dx < -10 || dy < -10) && (dx < 10 || dy < 10 || dx > -10 || dy > -10)) {
             score += getScore * 4;
         }
-        if ((dx > 16 || dy > 16 || dx < -16 || dy < -16) && (dx < 16 || dy < 16 || dx > -16 || dy > -16)) {
+        else if ((dx > 8 || dy > 8 || dx < -8 || dy < -8) && (dx < 8 || dy < 8 || dx > -8 || dy > -8)) {
             score += getScore * 3;
         }
-        if ((dx > 12 || dy > 12 || dx < -12 || dy < -12) && (dx < 12 || dy < 12 || dx > -12 || dy > -12)) {
+        else if (dx < 6 || dy < 6 || dx > -6 || dy > -6) {
             score += getScore * 2;
         }
-        if (dx < 12 || dy < 12 || dx > -12 || dy > -12) {
-            score += getScore;
-        }
+		else {
+			score += getScore;
+		}
     }
     getScore = 0;
 }
